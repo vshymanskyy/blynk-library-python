@@ -227,7 +227,7 @@ class Blynk:
         self._do_connect = connect
         self._ssl = ssl
         self.state = DISCONNECTED
-
+        
     def _format_msg(self, msg_type, *args):
         data = ('\0'.join(map(str, args))).encode('ascii')
         return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
@@ -383,6 +383,25 @@ class Blynk:
             self._vr_pins[pin] = VrPin(read, write)
         else:
             raise ValueError('the pin must be an integer between 0 and %d' % (MAX_VIRTUAL_PINS - 1))
+
+    def VIRTUAL_READ(blynk, pin):
+        class Decorator():
+            def __init__(self, func):
+                self.func = func
+                blynk._vr_pins[pin] = VrPin(func, None)
+                print(blynk, func, pin)
+            def __call__(self):
+                return self.func()
+        return Decorator
+
+    def VIRTUAL_WRITE(blynk, pin):
+        class Decorator():
+            def __init__(self, func):
+                self.func = func
+                blynk._vr_pins[pin] = VrPin(None, func)
+            def __call__(self):
+                return self.func()
+        return Decorator
 
     def on_connect(self, func):
         self._on_connect = func
