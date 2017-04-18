@@ -5,6 +5,7 @@ You can easily build graphic interfaces for all your
 projects by simply dragging and dropping widgets.
 
   Downloads, docs, tutorials: http://www.blynk.cc
+  Sketch generator:           http://examples.blynk.cc
   Blynk community:            http://community.blynk.cc
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
@@ -17,14 +18,12 @@ In your Blynk App project:
   bind it to Virtual Pin V2,
   set reading frequency to 'PUSH'.
   Run the App (green triangle in the upper right corner).
-
-Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 """
 
 import BlynkLib
 import time
 
-BLYNK_AUTH = 'YOUR_AUTH_TOKEN'
+BLYNK_AUTH = 'YourAuthToken'
 
 # initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)

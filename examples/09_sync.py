@@ -5,16 +5,15 @@ You can easily build graphic interfaces for all your
 projects by simply dragging and dropping widgets.
 
   Downloads, docs, tutorials: http://www.blynk.cc
+  Sketch generator:           http://examples.blynk.cc
   Blynk community:            http://community.blynk.cc
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
-
-Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 """
 
 import BlynkLib
 
-BLYNK_AUTH = 'YOUR_AUTH_TOKEN'
+BLYNK_AUTH = 'YourAuthToken'
 
 # initialize Blynk with security enabled
 blynk = BlynkLib.Blynk(BLYNK_AUTH)

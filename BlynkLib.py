@@ -1,50 +1,9 @@
 #!/usr/bin/env python3
 
-# Micro Python library that brings out-of-the-box Blynk support to
-# the WiPy. Requires a previously established internet connection
-# and a valid token string.
-# 
-# Example usage:
-# 
-#     import BlynkLib
-#     import time
-# 
-#     blynk = BlynkLib.Blynk('08a46fbc7f57407995f576f3f84c3f72')
-# 
-#     # define a virtual pin read handler
-#     def v0_read_handler():
-#         # we must call virtual write in order to send the value to the widget
-#         blynk.virtual_write(0, time.ticks_ms() // 1000)
-# 
-#     # register the virtual pin
-#     blynk.add_virtual_pin(0, read=v0_read_handler)
-# 
-#     # define a virtual pin write handler
-#     def v1_write_handler(value):
-#         print(value)
-# 
-#     # register the virtual pin
-#     blynk.add_virtual_pin(1, write=v1_write_handler)
-# 
-#     # register the task running every 3 sec
-#     # (period must be a multiple of 50 ms)
-#     def my_user_task():
-#         # do any non-blocking operations
-#         print('Action')
-# 
-#     blynk.set_user_task(my_user_task, 3000)
-# 
-#     # start Blynk (this call should never return)
-#     blynk.run()
-# 
-# -----------------------------------------------------------------------------
-# 
-# This file is part of the Micro Python project, http://micropython.org/
-# 
 # The MIT License (MIT)
 # 
-# Copyright (c) 2015 Daniel Campora
 # Copyright (c) 2015 Volodymyr Shymanskyy
+# Copyright (c) 2015 Daniel Campora
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -71,9 +30,11 @@ import time
 import sys
 try:
     import machine
+    idle_func = machine.idle
 except ImportError:
-    import MachineStub as machine
     const = lambda x: x
+    idle_func = lambda: 0
+    setattr(sys.modules['time'], 'ticks_ms', lambda: int(time.time() * 1000))
 
 HDR_LEN = const(5)
 HDR_FMT = "!BHH"
@@ -106,76 +67,17 @@ MAX_TX_RETRIES = const(3)
 
 MAX_VIRTUAL_PINS = const(32)
 
-DISCONNECTED = 0
-CONNECTING = 1
-AUTHENTICATING = 2
-AUTHENTICATED = 3
+DISCONNECTED = const(0)
+CONNECTING = const(1)
+AUTHENTICATING = const(2)
+AUTHENTICATED = const(3)
 
 EAGAIN = const(11)
 
 def sleep_from_until (start, delay):
     while time.ticks_diff(start, time.ticks_ms()) < delay:
-        machine.idle()
+        idle_func()
     return start + delay
-
-class HwPin:
-    _TimerMap = { 'GP9': (2, machine.Timer.B),
-                 'GP10': (3, machine.Timer.A),
-                 'GP11': (3, machine.Timer.B),
-                 'GP24': (0, machine.Timer.A),
-                 'GP25': (1, machine.Timer.A)}
-
-    def __init__(self, pin_num, mode, pull):
-        self._mode = mode
-        self._pull = pull
-        self._function = ''
-        self._pin = None
-        self._apin = None
-        self._pwm = None
-        pin_num = int(pin_num)
-        self._name = 'GP' + str(pin_num)
-
-    def _config(self, duty_cycle=0):
-        if self._function == 'dig':
-            _mode = machine.Pin.OUT if self._mode == 'out' else machine.Pin.IN
-            if self._pull == 'pu':
-                _pull = machine.Pin.PULL_UP
-            elif self._pull == 'pd':
-                _pull = machine.Pin.PULL_DOWN
-            else:
-                _pull = None
-            self._pin = machine.Pin(self._name, mode=_mode, pull=_pull, drive=machine.Pin.MED_POWER)
-        elif self._function == 'ana':
-            adc = machine.ADC(bits=12)
-            self._apin = adc.channel(pin=self._name)
-        else:
-            timer = machine.Timer(HwPin._TimerMap[self._name][0], mode=machine.Timer.PWM)
-            self._pwm = timer.channel(HwPin._TimerMap[self._name][1], freq=20000, duty_cycle=(duty_cycle * 100))
-
-    def digital_read(self):
-        if self._function != 'dig':
-            self._function = 'dig'
-            self._config()
-        return self._pin()
-
-    def digital_write(self, value):
-        if self._function != 'dig':
-            self._function = 'dig'
-            self._config()
-        self._pin(value)
-
-    def analog_read(self):
-        if self._function != 'ana':
-            self._function = 'ana'
-            self._config()
-        return self._apin()
-
-    def analog_write(self, value):
-        if self._function != 'pwm':
-            self._function = 'pwm'
-            self._config(value * 100)
-        else:
-            self._pwm.duty_cycle(value * 100)
 
 class VrPin:
     def __init__(self, read=None, write=None):
@@ -238,13 +140,7 @@ class Blynk:
         if cmd == 'info':
             pass
         elif cmd == 'pm':
-            pairs = zip(params[0::2], params[1::2])
-            for (pin, mode) in pairs:
-                pin = int(pin)
-                if mode != 'in' and mode != 'out' and mode != 'pu' and mode != 'pd':
-                    raise ValueError("Unknown pin %d mode: %s" % (pin, mode))
-                #self._hw_pins[pin] = HwPin(pin, mode, mode)
-            #self._pins_configured = True
+            pass
         elif cmd == 'vw':
             pin = int(params.pop(0))
             if pin in self._vr_pins and self._vr_pins[pin].write:
@@ -258,25 +154,8 @@ class Blynk:
                 self._vr_pins[pin].read()
             else:
                 print("Warning: Virtual read from unregistered pin %d" % pin)
-        elif self._pins_configured:
-            if cmd == 'dw':
-                pin = int(params.pop(0))
-                val = int(params.pop(0))
-                self._hw_pins[pin].digital_write(val)
-            elif cmd == 'aw':
-                pin = int(params.pop(0))
-                val = int(params.pop(0))
-                self._hw_pins[pin].analog_write(val)
-            elif cmd == 'dr':
-                pin = int(params.pop(0))
-                val = self._hw_pins[pin].digital_read()
-                self._send(self._format_msg(MSG_HW, 'dw', pin, val))
-            elif cmd == 'ar':
-                pin = int(params.pop(0))
-                val = self._hw_pins[pin].analog_read()
-                self._send(self._format_msg(MSG_HW, 'aw', pin, val))
-            else:
-                raise ValueError("Unknown message cmd: %s" % cmd)
+        else:
+            raise ValueError("Unknown message cmd: %s" % cmd)
 
     def _new_msg_id(self):
         self._msg_id += 1
@@ -389,7 +268,7 @@ class Blynk:
             def __init__(self, func):
                 self.func = func
                 blynk._vr_pins[pin] = VrPin(func, None)
-                print(blynk, func, pin)
+                #print(blynk, func, pin)
             def __call__(self):
                 return self.func()
         return Decorator
@@ -424,7 +303,6 @@ class Blynk:
         self._hw_pins = {}
         self._rx_data = b''
         self._msg_id = 1
-        self._pins_configured = False
         self._timeout = None
         self._tx_count = 0
         self._m_time = 0

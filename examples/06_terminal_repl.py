@@ -5,6 +5,7 @@ You can easily build graphic interfaces for all your
 projects by simply dragging and dropping widgets.
 
   Downloads, docs, tutorials: http://www.blynk.cc
+  Sketch generator:           http://examples.blynk.cc
   Blynk community:            http://community.blynk.cc
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
@@ -15,14 +16,12 @@ the REPL console.
 In your Blynk App project:
   Add a Terminal widget, bind it to Virtual Pin V5.
   Run the App (green triangle in the upper right corner).
-
-Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 """
 
 import BlynkLib
 import os
 
-BLYNK_AUTH = 'YOUR_AUTH_TOKEN'
+BLYNK_AUTH = 'YourAuthToken'
 
 def hello():
     print('Welcome!')
