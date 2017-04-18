@@ -1,4 +1,4 @@
-# blynk-library-py
+# blynk-library-python
 
 ## Usage
 
