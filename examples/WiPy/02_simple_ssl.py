@@ -23,16 +23,32 @@ In your Blynk App project:
   Add a Gauge widget,  bind it to Analog Pin 5.
   Add a Slider widget, bind it to Digital Pin 25.
   Run the App (green triangle in the upper right corner).
+
+Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 """
 
 import BlynkLib
 from network import WLAN
 from machine import RTC
 
+WIFI_SSID = 'YourWiFiNetwork'
+WIFI_AUTH = (WLAN.WPA2, 'YourWiFiPassword')
+
 BLYNK_AUTH = 'YourAuthToken'
 
-# initialize Blynk with security enabled
+# Set the current time (mandatory to validate certificates)
+RTC(datetime=(2017, 04, 18, 11, 30, 0, 0, None))
+
+# Connect to WiFi
+wifi = WLAN(mode=WLAN.STA)
+wifi.connect(WIFI_SSID, auth=WIFI_AUTH)
+while not wifi.isconnected():
+    pass
+
+print(wifi.ifconfig())
+
+# Initialize Blynk with security enabled
 blynk = BlynkLib.Blynk(BLYNK_AUTH, ssl=True)
 
-# start Blynk (this call should never return)
+# Start Blynk (this call should never return)
 blynk.run()
