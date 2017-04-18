@@ -1,5 +1,21 @@
 # blynk-library-python
 
+**Warning:** Work in progress. Code reviews and contributions are more than welcome!
+
+Supports:
+- Python 2 and Python 3
+- Windows, Linux, OSX
+- Micropython (PyCom WiPy, LoPy)
+
+Limitations:
+- Only virtual pins supported
+
+## Installation
+
+```sh
+TODO
+```
+
 ## Usage
 
 ```py
