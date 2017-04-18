@@ -27,7 +27,7 @@ blynk.run()
 
 ## Notes
 
-For some diveces (like PyCom WiPy) you need to setup internet connection first:
+For some devices (like PyCom WiPy) you need to setup internet connection first:
 ```py
 from network import WLAN
 
