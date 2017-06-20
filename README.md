@@ -6,14 +6,12 @@ Supports:
 - Python 2 and Python 3
 - Windows, Linux, OSX
 - Micropython (PyCom WiPy, LoPy)
-
-Limitations:
-- Only virtual pins supported
+- Virtual pins (see examples)
 
 ## Installation
 
 ```sh
-TODO
+pip install blynk-library-python
 ```
 
 ## Usage
