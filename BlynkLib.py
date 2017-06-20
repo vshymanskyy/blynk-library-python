@@ -34,7 +34,9 @@ try:
 except ImportError:
     const = lambda x: x
     idle_func = lambda: 0
+    setattr(sys.modules['time'], 'sleep_ms', lambda ms: time.sleep(ms // 1000))
     setattr(sys.modules['time'], 'ticks_ms', lambda: int(time.time() * 1000))
+    setattr(sys.modules['time'], 'ticks_diff', lambda s, e: e - s)
 
 HDR_LEN = const(5)
 HDR_FMT = "!BHH"
