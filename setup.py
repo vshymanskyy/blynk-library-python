@@ -16,7 +16,7 @@ setup(
 
     classifiers  = [
         "Topic :: Software Development :: Libraries :: Python Modules",
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "License :: OSI Approved :: MIT License",
         "Operating System :: POSIX :: Linux",
         "Operating System :: Microsoft :: Windows",
