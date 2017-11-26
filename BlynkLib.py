@@ -33,7 +33,7 @@ try:
     idle_func = machine.idle
 except ImportError:
     const = lambda x: x
-    idle_func = lambda: 0
+    idle_func = None
     setattr(sys.modules['time'], 'sleep_ms', lambda ms: time.sleep(ms // 1000))
     setattr(sys.modules['time'], 'ticks_ms', lambda: int(time.time() * 1000))
     setattr(sys.modules['time'], 'ticks_diff', lambda s, e: e - s)
@@ -77,8 +77,11 @@ AUTHENTICATED = const(3)
 EAGAIN = const(11)
 
 def sleep_from_until (start, delay):
-    while time.ticks_diff(start, time.ticks_ms()) < delay:
-        idle_func()
+    if idle_func is not None:
+        while time.ticks_diff(start, time.ticks_ms()) < delay:
+            idle_func()
+    else:
+        time.sleep(delay/1000)
     return start + delay
 
 class VrPin:
