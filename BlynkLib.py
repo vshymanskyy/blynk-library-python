@@ -28,6 +28,7 @@ import socket
 import struct
 import time
 import sys
+import ssl
 try:
     import machine
     idle_func = machine.idle
@@ -115,7 +116,7 @@ class Terminal:
                 print('Exception:\n  ' + repr(e))
 
 class Blynk:
-    def __init__(self, token, server='blynk-cloud.com', port=None, connect=True, ssl=False):
+    def __init__(self, token, server='blynk-cloud.com', port=None, connect=True, ssl=False, ca_certs='/flash/cert/ca.pem'):
         self._vr_pins = {}
         self._do_connect = False
         self._on_connect = None
@@ -133,6 +134,7 @@ class Blynk:
         self._port = port
         self._do_connect = connect
         self._ssl = ssl
+        self._ca_certs = ca_certs
         self.state = DISCONNECTED
         
     def _format_msg(self, msg_type, *args):
@@ -320,10 +322,14 @@ class Blynk:
                     try:
                         self.state = CONNECTING
                         if self._ssl:
-                            import ssl
                             print('SSL: Connecting to %s:%d' % (self._server, self._port))
-                            ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
-                            self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
+                            # socket module doesn't have IPPROTO_SEC attribute on all implementations.
+                            try:
+                                proto = socket.IPPROTO_SEC
+                            except AttributeError:
+                                proto = 0
+                            ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto)
+                            self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs=self._ca_certs)
                         else:
                             print('TCP: Connecting to %s:%d' % (self._server, self._port))
                             self.conn = socket.socket()
@@ -363,7 +369,10 @@ class Blynk:
                 except:
                     pass
                 if data:
-                    msg_type, msg_id, msg_len = struct.unpack(HDR_FMT, data)
+                    # Fix: only take the correct length of data, as sometimes the server seems to send more bytes than needed.
+                    # (appears when using SSL)
+                    msg_type, msg_id, msg_len = struct.unpack(HDR_FMT, data[0:HDR_LEN])
+
                     if msg_id == 0:
                         self._close('invalid msg id %d' % msg_id)
                         break
