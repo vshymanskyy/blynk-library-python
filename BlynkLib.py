@@ -126,7 +126,7 @@ class Blynk:
             if ssl:
                 port = 8441
             else:
-                port = 8442
+                port = 80
         self._port = port
         self._do_connect = connect
         self._ssl = ssl
