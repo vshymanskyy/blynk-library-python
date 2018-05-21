@@ -46,13 +46,19 @@ MAX_MSG_PER_SEC = const(20)
 MSG_RSP = const(0)
 MSG_LOGIN = const(2)
 MSG_PING  = const(6)
+
 MSG_TWEET = const(12)
 MSG_EMAIL = const(13)
 MSG_NOTIFY = const(14)
 MSG_BRIDGE = const(15)
 MSG_HW_SYNC = const(16)
-MSG_HW_INFO = const(17)
+MSG_INTERNAL = const(17)
+MSG_PROPERTY = const(19)
 MSG_HW = const(20)
+MSG_EVENT_LOG = const(64)
+
+MSG_REDIRECT  = const(41)  # TODO: not implemented
+MSG_DBG_PRINT  = const(55) # TODO: not implemented
 
 STA_SUCCESS = const(200)
 
@@ -131,7 +137,7 @@ class Blynk:
         self._do_connect = connect
         self._ssl = ssl
         self.state = DISCONNECTED
-        
+
     def _format_msg(self, msg_type, *args):
         data = ('\0'.join(map(str, args))).encode('ascii')
         return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
@@ -139,9 +145,10 @@ class Blynk:
     def _handle_hw(self, data):
         params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
         cmd = params.pop(0)
-        if cmd == 'info':
+        if cmd == 'pm':
             pass
-        elif cmd == 'pm':
+        elif cmd == 'dr' || cmd == 'dw' || cmd == 'ar' || cmd == 'aw':
+            print("Warning: Digital/Analog pins not supported. Please use Virtual pins")
             pass
         elif cmd == 'vw':
             pin = int(params.pop(0))
@@ -251,6 +258,17 @@ class Blynk:
         if self.state == AUTHENTICATED:
             self._send(self._format_msg(MSG_HW, 'vw', pin, val))
 
+    def set_property(self, pin, prop, val):
+        if self.state == AUTHENTICATED:
+            self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
+
+    def log_event(self, event, descr=None):
+        if self.state == AUTHENTICATED:
+            if descr==None:
+                self._send(self._format_msg(MSG_EVENT_LOG, event))
+            else:
+                self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
+
     def sync_all(self):
         if self.state == AUTHENTICATED:
             self._send(self._format_msg(MSG_HW_SYNC))
@@ -344,7 +362,7 @@ class Blynk:
                         continue
 
                     self.state = AUTHENTICATED
-                    self._send(self._format_msg(MSG_HW_INFO, 'ver', '0.0.1+py', 'h-beat', HB_PERIOD, 'dev', sys.platform))
+                    self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.2', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py'))
                     print('Access granted, happy Blynking!')
                     if self._on_connect:
                         self._on_connect()
@@ -364,6 +382,7 @@ class Blynk:
                     if msg_id == 0:
                         self._close('invalid msg id %d' % msg_id)
                         break
+                    # TODO: check length
                     if msg_type == MSG_RSP:
                         if msg_id == self._last_hb_id:
                             self._last_hb_id = 0
@@ -373,6 +392,8 @@ class Blynk:
                         data = self._recv(msg_len, MIN_SOCK_TO)
                         if data:
                             self._handle_hw(data)
+                    elif msg_type == MSG_INTERNAL: # TODO: other message types?
+                        break
                     else:
                         self._close('unknown message type %d' % msg_type)
                         break
