@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # The MIT License (MIT)
 # 
 # Copyright (c) 2015 Volodymyr Shymanskyy
@@ -147,7 +145,7 @@ class Blynk:
         cmd = params.pop(0)
         if cmd == 'pm':
             pass
-        elif cmd == 'dr' || cmd == 'dw' || cmd == 'ar' || cmd == 'aw':
+        elif cmd == 'dr' or cmd == 'dw' or cmd == 'ar' or cmd == 'aw':
             print("Warning: Digital/Analog pins not supported. Please use Virtual pins")
             pass
         elif cmd == 'vw':
