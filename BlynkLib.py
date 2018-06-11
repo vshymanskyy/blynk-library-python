@@ -371,7 +371,7 @@ class Blynk:
                         continue
 
                     self.state = AUTHENTICATED
-                    self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.2', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py'))
+                    self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py'))
                     print('Access granted, happy Blynking!')
                     if self._on_connect:
                         self._on_connect()
