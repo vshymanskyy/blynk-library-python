@@ -1,6 +1,6 @@
 # The MIT License (MIT)
 # 
-# Copyright (c) 2015 Volodymyr Shymanskyy
+# Copyright (c) 2015-2018 Volodymyr Shymanskyy
 # Copyright (c) 2015 Daniel Campora
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -80,6 +80,16 @@ AUTHENTICATED = const(3)
 
 EAGAIN = const(11)
 
+LOGO = const("""
+    ___  __          __
+   / _ )/ /_ _____  / /__
+  / _  / / // / _ \\/  '_/
+ /____/_/\\_, /_//_/_/\\_\\
+        /___/
+
+  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-python
+""")
+
 def sleep_from_until (start, delay):
     while time.ticks_diff(start, time.ticks_ms()) < delay:
         idle_func()
@@ -135,6 +145,7 @@ class Blynk:
         self._do_connect = connect
         self._ssl = ssl
         self.state = DISCONNECTED
+        print(LOGO)
 
     def _format_msg(self, msg_type, *args):
         data = ('\0'.join(map(str, args))).encode('ascii')
