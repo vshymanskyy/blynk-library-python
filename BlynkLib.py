@@ -37,8 +37,7 @@ STA_INVALID_TOKEN = const(9)
 
 DISCONNECTED = const(0)
 CONNECTING = const(1)
-AUTHENTICATING = const(2)
-AUTHENTICATED = const(3)
+CONNECTED = const(2)
 
 print("""
     ___  __          __
@@ -47,45 +46,20 @@ print("""
  /____/_/\\_, /_//_/_/\\_\\
         /___/ for Python v""" + _VERSION + "\n")
 
-class Terminal:
-    def __init__(self, blynk, pin):
-        self._blynk = blynk
-        self._pin = pin
-
-    def write(self, data):
-        self._blynk.virtual_write(self._pin, data)
-
-    def read(self, size):
-        return ''
-
-    def virtual_read(self):
-        pass
-
-    def virtual_write(self, value):
-        try:
-            out = eval(value)
-            if out != None:
-                print(repr(out))
-        except:
-            try:
-                exec(value)
-            except Exception as e:
-                print('Exception:\n  ' + repr(e))
-
-class Blynk:
-    def __init__(self, auth, heartbeat=10, buffin=1024, log=dummy):
+class BlynkProtocol:
+    def __init__(self, auth, heartbeat=10, buffin=1024, log=None):
+        self.callbacks = {}
         self.heartbeat = heartbeat*1000
         self.buffin = buffin
-        self.callbacks = {}
-        self.state = DISCONNECTED
         self.log = log or dummy
         self.auth = auth
+        self.connect()
 
     def on(self, evt, func):
         self.callbacks[evt] = func
 
     def emit(self, evt, *args):
-        print("Event:", evt, " -> ", *args)
+        self.log("Event:", evt, "->", *args)
         if evt in self.callbacks:
             self.callbacks[evt](*args)
         
@@ -96,7 +70,7 @@ class Blynk:
         self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
 
     def sync_virtual(self, pin):
-        if self.state == AUTHENTICATED:
+        if self.state == CONNECTED:
             self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
 
     def notify(self, msg):
@@ -125,7 +99,7 @@ class Blynk:
         self.msg_id = 1
         (self.lastRecv, self.lastSend, self.lastPing) = (gettime(), 0, 0)
         self.bin = b""
-        self.state = AUTHENTICATING
+        self.state = CONNECTING
         self.sendMsg(MSG_LOGIN, None, self.auth)
 
     def disconnect(self):
@@ -133,7 +107,7 @@ class Blynk:
         self.emit('disconnected')
 
     def process(self, data=b''):
-        if not (self.state == AUTHENTICATING or self.state == AUTHENTICATED):
+        if not (self.state == CONNECTING or self.state == CONNECTED):
             return
         now = gettime()
         if now - self.lastRecv > self.heartbeat+(self.heartbeat/2):
@@ -158,9 +132,9 @@ class Blynk:
                 self.bin = self.bin[5:]
 
                 self.log('>', cmd, i, '|', msg_len)
-                if self.state == AUTHENTICATING and i == 1:
+                if self.state == CONNECTING and i == 1:
                     if msg_len == STA_SUCCESS:
-                        self.state = AUTHENTICATED
+                        self.state = CONNECTED
                         ping = now - self.lastSend
                         self.sendMsg(MSG_INTERNAL, None, 'ver', _VERSION, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python')
                         self.emit('connected', ping)
@@ -212,3 +186,32 @@ class Blynk:
             def __call__(self):
                 return self.func()
         return Decorator
+
+import socket
+
+class Blynk(BlynkProtocol):
+    def __init__(self, auth, **kwargs):
+        BlynkProtocol.__init__(self, auth, **kwargs)
+
+    def connect(self):
+        try:
+            self.conn = socket.socket()
+            self.conn.connect(socket.getaddrinfo("blynk-cloud.com", 80)[0][4])
+            self.conn.settimeout(0.05)
+            BlynkProtocol.connect(self)
+        except:
+            raise ValueError('connection with the Blynk servers failed')
+
+    def _send(self, data):
+        self.conn.send(data)
+
+    def run(self):
+        data = b''
+        try:
+            data = self.conn.recv(self.buffin)
+        except KeyboardInterrupt:
+            raise
+        except OSError:
+            pass
+        self.process(data)
+
