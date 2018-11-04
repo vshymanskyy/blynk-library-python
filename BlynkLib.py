@@ -53,62 +53,80 @@ class BlynkProtocol:
         self.buffin = buffin
         self.log = log or dummy
         self.auth = auth
+        self.state = DISCONNECTED
         self.connect()
 
     def on(self, evt, func):
         self.callbacks[evt] = func
-
-    def emit(self, evt, *args):
-        self.log("Event:", evt, "->", *args)
-        if evt in self.callbacks:
-            self.callbacks[evt](*args)
         
-    def virtual_write(self, pin, val):
-        self._send(self._format_msg(MSG_HW, 'vw', pin, val))
+    def ON(blynk, evt):
+        class Decorator:
+            def __init__(self, func):
+                self.func = func
+                blynk.callbacks[evt] = func
+            def __call__(self):
+                return self.func()
+        return Decorator
 
-    def set_property(self, pin, prop, val):
-        self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
+    def emit(self, evt, *a, **kv):
+        self.log("Event:", evt, "->", *a)
+        if evt in self.callbacks:
+            self.callbacks[evt](*a, **kv)
 
-    def sync_virtual(self, pin):
-        if self.state == CONNECTED:
-            self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
+    def virtual_write(self, pin, *val):
+        self.sendMsg(MSG_HW, 'vw', pin, *val)
+
+    def set_property(self, pin, prop, *val):
+        self.sendMsg(MSG_PROPERTY, pin, prop, *val)
+
+    def sync_virtual(self, *pins):
+        self.sendMsg(MSG_HW_SYNC, 'vr', *pins)
 
     def notify(self, msg):
-        self._send(self._format_msg(MSG_NOTIFY, msg))
+        self.sendMsg(MSG_NOTIFY, msg)
 
     def log_event(self, event, descr=None):
         if descr==None:
-            self._send(self._format_msg(MSG_EVENT_LOG, event))
+            self.sendMsg(MSG_EVENT_LOG, event)
         else:
-            self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
+            self.sendMsg(MSG_EVENT_LOG, event, descr)
 
-    def sendMsg(self, cmd, id=None, *args):
-        payload = ('\0'.join(map(str, args))).encode('ascii')
-        if id == None:
+    def sendMsg(self, cmd, *args, **kwargs):
+        if "id" in kwargs:
+            id = kwargs.id
+        else:
             id = self.msg_id
             self.msg_id += 1
             if self.msg_id > 0xFFFF:
                 self.msg_id = 1
+                
+        if cmd == MSG_RSP:
+            data = b''
+            dlen = args[0]
+        else:
+            data = ('\0'.join(map(str, args))).encode('ascii')
+            dlen = len(data)
         
         self.log('<', cmd, id, '|', *args)
-        msg = struct.pack("!BHH", cmd, id, len(payload)) + payload
+        msg = struct.pack("!BHH", cmd, id, dlen) + data
         self.lastSend = gettime()
         self._send(msg)
 
     def connect(self):
+        if self.state != DISCONNECTED: return
         self.msg_id = 1
         (self.lastRecv, self.lastSend, self.lastPing) = (gettime(), 0, 0)
         self.bin = b""
         self.state = CONNECTING
-        self.sendMsg(MSG_LOGIN, None, self.auth)
+        self.sendMsg(MSG_LOGIN, self.auth)
 
     def disconnect(self):
+        if self.state == DISCONNECTED: return
         self.state = DISCONNECTED
         self.emit('disconnected')
 
     def process(self, data=b''):
-        if not (self.state == CONNECTING or self.state == CONNECTED):
-            return
+        if not (self.state == CONNECTING or self.state == CONNECTED): return
         now = gettime()
         if now - self.lastRecv > self.heartbeat+(self.heartbeat/2):
             return self.disconnect()
@@ -124,40 +142,39 @@ class BlynkProtocol:
         while True:
             if len(self.bin) < 5: return
             
-            cmd, i, msg_len = struct.unpack("!BHH", self.bin[:5])
+            cmd, i, dlen = struct.unpack("!BHH", self.bin[:5])
             if i == 0: return self.disconnect()
                       
             self.lastRecv = now
             if cmd == MSG_RSP:
                 self.bin = self.bin[5:]
 
-                self.log('>', cmd, i, '|', msg_len)
+                self.log('>', cmd, i, '|', dlen)
                 if self.state == CONNECTING and i == 1:
-                    if msg_len == STA_SUCCESS:
+                    if dlen == STA_SUCCESS:
                         self.state = CONNECTED
-                        ping = now - self.lastSend
-                        self.sendMsg(MSG_INTERNAL, None, 'ver', _VERSION, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python')
-                        self.emit('connected', ping)
-                    elif msg_len == STA_INVALID_TOKEN:
-                        print("Invalid auth token")
-                        self.disconnect()
+                        dt = now - self.lastSend
+                        self.sendMsg(MSG_INTERNAL, 'ver', _VERSION, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python')
+                        self.emit('connected', ping=dt)
                     else:
-                        self.disconnect()
+                        if dlen == STA_INVALID_TOKEN:
+                            print("Invalid auth token")
+                        return self.disconnect()
             else:
-                if msg_len >= self.buffin:
-                    print("Cmd too big: ", msg_len)
+                if dlen >= self.buffin:
+                    print("Cmd too big: ", dlen)
                     return self.disconnect()
             
-                if len(self.bin) < 5+msg_len: return
+                if len(self.bin) < 5+dlen: return
                 
-                data = self.bin[5:5+msg_len]
-                self.bin = self.bin[5+msg_len:]
+                data = self.bin[5:5+dlen]
+                self.bin = self.bin[5+dlen:]
 
                 args = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
 
                 self.log('>', cmd, i, '|', ','.join(args))
                 if cmd == MSG_PING:
-                    self.sendMsg(MSG_RSP, i, STA_SUCCESS) #TODO
+                    self.sendMsg(MSG_RSP, STA_SUCCESS, id=i)
                 elif cmd == MSG_HW or cmd == MSG_BRIDGE:
                     if args[0] == 'vw':
                         self.emit("V"+args[1], args[2:])
@@ -204,6 +221,7 @@ class Blynk(BlynkProtocol):
 
     def _send(self, data):
         self.conn.send(data)
+        # TODO: handle disconnect
 
     def run(self):
         data = b''
@@ -211,7 +229,7 @@ class Blynk(BlynkProtocol):
             data = self.conn.recv(self.buffin)
         except KeyboardInterrupt:
             raise
-        except OSError:
+        except: # TODO: handle disconnect
             pass
         self.process(data)
 
