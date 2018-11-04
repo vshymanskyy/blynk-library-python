@@ -1,45 +1,19 @@
-# The MIT License (MIT)
-# 
-# Copyright (c) 2015-2018 Volodymyr Shymanskyy
-# Copyright (c) 2015 Daniel Campora
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
+# Copyright (c) 2015-2018 Volodymyr Shymanskyy. See the file LICENSE for copying permission.
 
+_VERSION = "0.2.0"
 
-import socket
 import struct
 import time
-import sys
+
 try:
     import machine
-    idle_func = machine.idle
+    gettime = lambda: time.ticks_ms()
 except ImportError:
     const = lambda x: x
-    idle_func = lambda: 0
-    setattr(sys.modules['time'], 'sleep_ms', lambda ms: time.sleep(ms // 1000))
-    setattr(sys.modules['time'], 'ticks_ms', lambda: int(time.time() * 1000))
-    setattr(sys.modules['time'], 'ticks_diff', lambda s, e: e - s)
+    gettime = lambda: int(time.time() * 1000)
 
-HDR_LEN = const(5)
-HDR_FMT = "!BHH"
-
-MAX_MSG_PER_SEC = const(20)
+def dummy(*args):
+    pass 
 
 MSG_RSP = const(0)
 MSG_LOGIN = const(2)
@@ -59,46 +33,19 @@ MSG_REDIRECT  = const(41)  # TODO: not implemented
 MSG_DBG_PRINT  = const(55) # TODO: not implemented
 
 STA_SUCCESS = const(200)
-
-HB_PERIOD = const(10)
-NON_BLK_SOCK = const(0)
-MIN_SOCK_TO = const(1) # 1 second
-MAX_SOCK_TO = const(5) # 5 seconds, must be < HB_PERIOD
-RECONNECT_DELAY = const(1) # 1 second
-TASK_PERIOD_RES = const(50) # 50 ms
-IDLE_TIME_MS = const(5) # 5 ms
-
-RE_TX_DELAY = const(2)
-MAX_TX_RETRIES = const(3)
-
-MAX_VIRTUAL_PINS = const(32)
+STA_INVALID_TOKEN = const(9)
 
 DISCONNECTED = const(0)
 CONNECTING = const(1)
 AUTHENTICATING = const(2)
 AUTHENTICATED = const(3)
 
-EAGAIN = const(11)
-
-LOGO = const("""
+print("""
     ___  __          __
    / _ )/ /_ _____  / /__
   / _  / / // / _ \\/  '_/
  /____/_/\\_, /_//_/_/\\_\\
-        /___/
-
-  Give Blynk a Github star! => https://github.com/vshymanskyy/blynk-library-python
-""")
-
-def sleep_from_until (start, delay):
-    while time.ticks_diff(start, time.ticks_ms()) < delay:
-        idle_func()
-    return start + delay
-
-class VrPin:
-    def __init__(self, read=None, write=None):
-        self.read = read
-        self.write = write
+        /___/ for Python v""" + _VERSION + "\n")
 
 class Terminal:
     def __init__(self, blynk, pin):
@@ -126,178 +73,133 @@ class Terminal:
                 print('Exception:\n  ' + repr(e))
 
 class Blynk:
-    def __init__(self, token, server='blynk-cloud.com', port=None, connect=True, ssl=False):
-        self._vr_pins = {}
-        self._do_connect = False
-        self._on_connect = None
-        self._task = None
-        self._task_period = 0
-        self._token = token
-        if isinstance (self._token, str):
-            self._token = token.encode('ascii')
-        self._server = server
-        if port is None:
-            if ssl:
-                port = 8441
-            else:
-                port = 80
-        self._port = port
-        self._do_connect = connect
-        self._ssl = ssl
+    def __init__(self, auth, heartbeat=10, buffin=1024, log=dummy):
+        self.heartbeat = heartbeat*1000
+        self.buffin = buffin
+        self.callbacks = {}
         self.state = DISCONNECTED
-        print(LOGO)
+        self.log = log or dummy
+        self.auth = auth
 
-    def _format_msg(self, msg_type, *args):
-        data = ('\0'.join(map(str, args))).encode('ascii')
-        return struct.pack(HDR_FMT, msg_type, self._new_msg_id(), len(data)) + data
+    def on(self, evt, func):
+        self.callbacks[evt] = func
 
-    def _handle_hw(self, data):
-        params = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
-        cmd = params.pop(0)
-        if cmd == 'pm':
-            pass
-        elif cmd == 'dr' or cmd == 'dw' or cmd == 'ar' or cmd == 'aw':
-            print("Warning: Digital/Analog pins not supported. Please use Virtual pins")
-            pass
-        elif cmd == 'vw':
-            pin = int(params.pop(0))
-            if pin in self._vr_pins and self._vr_pins[pin].write:
-                for param in params:
-                    self._vr_pins[pin].write(param)
-            else:
-                print("Warning: Virtual write to unregistered pin %d" % pin)
-        elif cmd == 'vr':
-            pin = int(params.pop(0))
-            if pin in self._vr_pins and self._vr_pins[pin].read:
-                self._vr_pins[pin].read()
-            else:
-                print("Warning: Virtual read from unregistered pin %d" % pin)
-        else:
-            raise ValueError("Unknown message cmd: %s" % cmd)
-
-    def _new_msg_id(self):
-        self._msg_id += 1
-        if (self._msg_id > 0xFFFF):
-            self._msg_id = 1
-        return self._msg_id
-
-    def _settimeout(self, timeout):
-        if timeout != self._timeout:
-            self._timeout = timeout
-            self.conn.settimeout(timeout)
-
-    def _recv(self, length, timeout=0):
-        self._settimeout (timeout)
-        try:
-            self._rx_data += self.conn.recv(length)
-        except socket.timeout:
-            return b''
-        except socket.error as e:
-            if e.args[0] ==  EAGAIN:
-                return b''
-            else:
-                raise
-        if len(self._rx_data) >= length:
-            data = self._rx_data[:length]
-            self._rx_data = self._rx_data[length:]
-            return data
-        else:
-            return b''
-
-    def _send(self, data, send_anyway=False):
-        if self._tx_count < MAX_MSG_PER_SEC or send_anyway:
-            retries = 0
-            while retries <= MAX_TX_RETRIES:
-                try:
-                    self.conn.send(data)
-                    self._tx_count += 1
-                    break
-                except socket.error as er:
-                    if er.args[0] != EAGAIN:
-                        raise
-                    else:
-                        time.sleep_ms(RE_TX_DELAY)
-                        retries += 1
-
-    def _close(self, emsg=None):
-        self.conn.close()
-        self.state = DISCONNECTED
-        time.sleep(RECONNECT_DELAY)
-        if emsg:
-            print('Error: %s, connection closed' % emsg)
-
-    def _server_alive(self):
-        c_time = int(time.time())
-        if self._m_time != c_time:
-            self._m_time = c_time
-            self._tx_count = 0
-            if self._last_hb_id != 0 and c_time - self._hb_time >= MAX_SOCK_TO:
-                return False
-            if c_time - self._hb_time >= HB_PERIOD and self.state == AUTHENTICATED:
-                self._hb_time = c_time
-                self._last_hb_id = self._new_msg_id()
-                self._send(struct.pack(HDR_FMT, MSG_PING, self._last_hb_id, 0), True)
-        return True
-
-    def _run_task(self):
-        if self._task:
-            c_millis = time.ticks_ms()
-            if c_millis - self._task_millis >= self._task_period:
-                self._task_millis += self._task_period
-                self._task()
-
-    def repl(self, pin):
-        repl = Terminal(self, pin)
-        self.add_virtual_pin(pin, repl.virtual_read, repl.virtual_write)
-        return repl
-
-    def notify(self, msg):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_NOTIFY, msg))
-
-    def tweet(self, msg):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_TWEET, msg))
-
-    def email(self, to, subject, body):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_EMAIL, to, subject, body))
-
+    def emit(self, evt, *args):
+        print("Event:", evt, " -> ", *args)
+        if evt in self.callbacks:
+            self.callbacks[evt](*args)
+        
     def virtual_write(self, pin, val):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_HW, 'vw', pin, val))
+        self._send(self._format_msg(MSG_HW, 'vw', pin, val))
 
     def set_property(self, pin, prop, val):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
-
-    def log_event(self, event, descr=None):
-        if self.state == AUTHENTICATED:
-            if descr==None:
-                self._send(self._format_msg(MSG_EVENT_LOG, event))
-            else:
-                self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
-
-    def sync_all(self):
-        if self.state == AUTHENTICATED:
-            self._send(self._format_msg(MSG_HW_SYNC))
+        self._send(self._format_msg(MSG_PROPERTY, pin, prop, val))
 
     def sync_virtual(self, pin):
         if self.state == AUTHENTICATED:
             self._send(self._format_msg(MSG_HW_SYNC, 'vr', pin))
 
-    def add_virtual_pin(self, pin, read=None, write=None):
-        if isinstance(pin, int) and pin in range(0, MAX_VIRTUAL_PINS):
-            self._vr_pins[pin] = VrPin(read, write)
+    def notify(self, msg):
+        self._send(self._format_msg(MSG_NOTIFY, msg))
+
+    def log_event(self, event, descr=None):
+        if descr==None:
+            self._send(self._format_msg(MSG_EVENT_LOG, event))
         else:
-            raise ValueError('the pin must be an integer between 0 and %d' % (MAX_VIRTUAL_PINS - 1))
+            self._send(self._format_msg(MSG_EVENT_LOG, event, descr))
+
+    def sendMsg(self, cmd, id=None, *args):
+        payload = ('\0'.join(map(str, args))).encode('ascii')
+        if id == None:
+            id = self.msg_id
+            self.msg_id += 1
+            if self.msg_id > 0xFFFF:
+                self.msg_id = 1
+        
+        self.log('<', cmd, id, '|', *args)
+        msg = struct.pack("!BHH", cmd, id, len(payload)) + payload
+        self.lastSend = gettime()
+        self._send(msg)
+
+    def connect(self):
+        self.msg_id = 1
+        (self.lastRecv, self.lastSend, self.lastPing) = (gettime(), 0, 0)
+        self.bin = b""
+        self.state = AUTHENTICATING
+        self.sendMsg(MSG_LOGIN, None, self.auth)
+
+    def disconnect(self):
+        self.state = DISCONNECTED
+        self.emit('disconnected')
+
+    def process(self, data=b''):
+        if not (self.state == AUTHENTICATING or self.state == AUTHENTICATED):
+            return
+        now = gettime()
+        if now - self.lastRecv > self.heartbeat+(self.heartbeat/2):
+            return self.disconnect()
+        if (now - self.lastPing > self.heartbeat/10 and
+            (now - self.lastSend > self.heartbeat or
+             now - self.lastRecv > self.heartbeat)):
+            self.sendMsg(MSG_PING)
+            self.lastPing = now
+        
+        if data != None and len(data):
+            self.bin += data
+
+        while True:
+            if len(self.bin) < 5: return
+            
+            cmd, i, msg_len = struct.unpack("!BHH", self.bin[:5])
+            if i == 0: return self.disconnect()
+                      
+            self.lastRecv = now
+            if cmd == MSG_RSP:
+                self.bin = self.bin[5:]
+
+                self.log('>', cmd, i, '|', msg_len)
+                if self.state == AUTHENTICATING and i == 1:
+                    if msg_len == STA_SUCCESS:
+                        self.state = AUTHENTICATED
+                        ping = now - self.lastSend
+                        self.sendMsg(MSG_INTERNAL, None, 'ver', _VERSION, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python')
+                        self.emit('connected', ping)
+                    elif msg_len == STA_INVALID_TOKEN:
+                        print("Invalid auth token")
+                        self.disconnect()
+                    else:
+                        self.disconnect()
+            else:
+                if msg_len >= self.buffin:
+                    print("Cmd too big: ", msg_len)
+                    return self.disconnect()
+            
+                if len(self.bin) < 5+msg_len: return
+                
+                data = self.bin[5:5+msg_len]
+                self.bin = self.bin[5+msg_len:]
+
+                args = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
+
+                self.log('>', cmd, i, '|', ','.join(args))
+                if cmd == MSG_PING:
+                    self.sendMsg(MSG_RSP, i, STA_SUCCESS) #TODO
+                elif cmd == MSG_HW or cmd == MSG_BRIDGE:
+                    if args[0] == 'vw':
+                        self.emit("V"+args[1], args[2:])
+                    elif args[0] == 'vr':
+                        self.emit("readV"+args[1])
+                elif cmd == MSG_INTERNAL:
+                    pass
+                else:
+                    print("Unexpected command: ", cmd)
+                    return self.disconnect()
 
     def VIRTUAL_READ(blynk, pin):
         class Decorator():
             def __init__(self, func):
                 self.func = func
-                blynk._vr_pins[pin] = VrPin(func, None)
-                #print(blynk, func, pin)
+                blynk.callbacks["readV"+str(pin)] = func
             def __call__(self):
                 return self.func()
         return Decorator
@@ -306,113 +208,7 @@ class Blynk:
         class Decorator():
             def __init__(self, func):
                 self.func = func
-                blynk._vr_pins[pin] = VrPin(None, func)
+                blynk.callbacks["V"+str(pin)] = func
             def __call__(self):
                 return self.func()
         return Decorator
-
-    def on_connect(self, func):
-        self._on_connect = func
-
-    def set_user_task(self, task, ms_period):
-        if ms_period % TASK_PERIOD_RES != 0:
-            raise ValueError('the user task period must be a multiple of %d ms' % TASK_PERIOD_RES)
-        self._task = task
-        self._task_period = ms_period
-
-    def connect(self):
-        self._do_connect = True
-
-    def disconnect(self):
-        self._do_connect = False
-
-    def run(self):
-        self._start_time = time.ticks_ms()
-        self._task_millis = self._start_time
-        self._hw_pins = {}
-        self._rx_data = b''
-        self._msg_id = 1
-        self._timeout = None
-        self._tx_count = 0
-        self._m_time = 0
-        self.state = DISCONNECTED
-
-        while True:
-            while self.state != AUTHENTICATED:
-                self._run_task()
-                if self._do_connect:
-                    try:
-                        self.state = CONNECTING
-                        if self._ssl:
-                            import ssl
-                            print('SSL: Connecting to %s:%d' % (self._server, self._port))
-                            ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SEC)
-                            self.conn = ssl.wrap_socket(ss, cert_reqs=ssl.CERT_REQUIRED, ca_certs='/flash/cert/ca.pem')
-                        else:
-                            print('TCP: Connecting to %s:%d' % (self._server, self._port))
-                            self.conn = socket.socket()
-                        self.conn.connect(socket.getaddrinfo(self._server, self._port)[0][4])
-                    except:
-                        self._close('connection with the Blynk servers failed')
-                        continue
-
-                    self.state = AUTHENTICATING
-                    hdr = struct.pack(HDR_FMT, MSG_LOGIN, self._new_msg_id(), len(self._token))
-                    print('Blynk connection successful, authenticating...')
-                    self._send(hdr + self._token, True)
-                    data = self._recv(HDR_LEN, timeout=MAX_SOCK_TO)
-                    if not data:
-                        self._close('Blynk authentication timed out')
-                        continue
-
-                    msg_type, msg_id, status = struct.unpack(HDR_FMT, data)
-                    if status != STA_SUCCESS or msg_id == 0:
-                        self._close('Blynk authentication failed')
-                        continue
-
-                    self.state = AUTHENTICATED
-                    self._send(self._format_msg(MSG_INTERNAL, 'ver', '0.1.3', 'buff-in', 4096, 'h-beat', HB_PERIOD, 'dev', sys.platform+'-py'))
-                    print('Access granted, happy Blynking!')
-                    if self._on_connect:
-                        self._on_connect()
-                else:
-                    self._start_time = sleep_from_until(self._start_time, TASK_PERIOD_RES)
-
-            self._hb_time = 0
-            self._last_hb_id = 0
-            self._tx_count = 0
-            while self._do_connect:
-                try:
-                    data = self._recv(HDR_LEN, NON_BLK_SOCK)
-                except:
-                    pass
-                if data:
-                    msg_type, msg_id, msg_len = struct.unpack(HDR_FMT, data)
-                    if msg_id == 0:
-                        self._close('invalid msg id %d' % msg_id)
-                        break
-                    # TODO: check length
-                    if msg_type == MSG_RSP:
-                        if msg_id == self._last_hb_id:
-                            self._last_hb_id = 0
-                    elif msg_type == MSG_PING:
-                        self._send(struct.pack(HDR_FMT, MSG_RSP, msg_id, STA_SUCCESS), True)
-                    elif msg_type == MSG_HW or msg_type == MSG_BRIDGE:
-                        data = self._recv(msg_len, MIN_SOCK_TO)
-                        if data:
-                            self._handle_hw(data)
-                    elif msg_type == MSG_INTERNAL: # TODO: other message types?
-                        break
-                    else:
-                        self._close('unknown message type %d' % msg_type)
-                        break
-                else:
-                    self._start_time = sleep_from_until(self._start_time, IDLE_TIME_MS)
-                if not self._server_alive():
-                    self._close('Blynk server is offline')
-                    break
-                self._run_task()
-
-            if not self._do_connect:
-                self._close()
-                print('Blynk disconnection requested by the user')
