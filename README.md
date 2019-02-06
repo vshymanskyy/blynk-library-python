@@ -40,12 +40,9 @@ Blynk for Business: http://www.blynk.io
 
 ```py
 import BlynkLib
-import time
-
-BLYNK_AUTH = 'YourAuthToken'
 
 # Initialize Blynk
-blynk = BlynkLib.Blynk(BLYNK_AUTH)
+blynk = BlynkLib.Blynk('YourAuthToken')
 
 # Register Virtual Pins
 @blynk.VIRTUAL_WRITE(1)
@@ -57,8 +54,8 @@ def my_read_handler():
     # this widget will show some time in seconds..
     blynk.virtual_write(2, time.ticks_ms() // 1000)
 
-# Start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()
 ```
 
 ## Installation
