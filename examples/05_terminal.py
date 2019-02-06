@@ -39,5 +39,5 @@ def v3_write_handler(value):
     finally:
         blynk.virtual_write(3, '\n')
 
-# start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()

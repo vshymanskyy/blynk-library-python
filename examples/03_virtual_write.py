@@ -35,5 +35,5 @@ blynk = BlynkLib.Blynk(BLYNK_AUTH)
 def v3_write_handler(value):
     print('Current slider value: {}'.format(value))
 
-# Start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()

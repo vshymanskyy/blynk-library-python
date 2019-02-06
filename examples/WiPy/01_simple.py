@@ -39,10 +39,10 @@ wifi.connect(WIFI_SSID, auth=WIFI_AUTH)
 while not wifi.isconnected():
     pass
 
-print(wlan.ifconfig())
+print(wifi.ifconfig())
 
 # Initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-# Start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()

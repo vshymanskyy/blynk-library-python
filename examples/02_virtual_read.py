@@ -36,5 +36,5 @@ def v2_read_handler():
     # This widget will show some time in seconds..
     blynk.virtual_write(2, time.ticks_ms() // 1000)
 
-# Start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()

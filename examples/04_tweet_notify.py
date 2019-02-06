@@ -35,5 +35,5 @@ def v4_write_handler(value):
         blynk.notify('You pressed the button and I know it ;)')
         blynk.tweet('My WiPy project is tweeting using @blynk_app and it’s awesome! #IoT #blynk @wipyio @micropython')
 
-# start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()

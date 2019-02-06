@@ -37,7 +37,7 @@ WIFI_AUTH = (WLAN.WPA2, 'YourWiFiPassword')
 BLYNK_AUTH = 'YourAuthToken'
 
 # Set the current time (mandatory to validate certificates)
-RTC(datetime=(2017, 04, 18, 11, 30, 0, 0, None))
+RTC(datetime=(2019, 02, 01, 11, 30, 0, 0, None))
 
 # Connect to WiFi
 wifi = WLAN(mode=WLAN.STA)
@@ -50,5 +50,5 @@ print(wifi.ifconfig())
 # Initialize Blynk with security enabled
 blynk = BlynkLib.Blynk(BLYNK_AUTH, ssl=True)
 
-# Start Blynk (this call should never return)
-blynk.run()
+while True:
+    blynk.run()
