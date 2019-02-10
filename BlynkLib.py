@@ -47,12 +47,14 @@ print("""
         /___/ for Python v""" + _VERSION + "\n")
 
 class BlynkProtocol:
-    def __init__(self, auth, heartbeat=10, buffin=1024, log=None):
+    def __init__(self, auth, server='blynk-cloud.com', port=80, heartbeat=10, buffin=1024, log=None):
         self.callbacks = {}
         self.heartbeat = heartbeat*1000
         self.buffin = buffin
         self.log = log or dummy
         self.auth = auth
+        self.server = server
+        self.port = port
         self.state = DISCONNECTED
         self.connect()
 
@@ -214,11 +216,11 @@ class Blynk(BlynkProtocol):
     def connect(self):
         try:
             self.conn = socket.socket()
-            self.conn.connect(socket.getaddrinfo("blynk-cloud.com", 80)[0][4])
+            self.conn.connect(socket.getaddrinfo(self.server, self.port)[0][4])
             self.conn.settimeout(0.05)
             BlynkProtocol.connect(self)
         except:
-            raise ValueError('Connection with the Blynk servers failed')
+            raise ValueError('Connection with the Blynk server %s:%d failed' % (self.server, self.port))
 
     def _send(self, data):
         self.conn.send(data)
