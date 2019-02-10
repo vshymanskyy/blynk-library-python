@@ -48,7 +48,8 @@ print("""
 
 class BlynkProtocol:
     def __init__(self, auth, server='blynk-cloud.com', port=80, heartbeat=10, buffin=1024, log=None):
-        self.callbacks = {}
+        self.callbacks = {}    # calls user function with value(s) as arguments
+        self.callbacks2 = {}   # calls user function with pin and value(s) as arguments
         self.heartbeat = heartbeat*1000
         self.buffin = buffin
         self.log = log or dummy
@@ -63,6 +64,16 @@ class BlynkProtocol:
             def __init__(self, func):
                 self.func = func
                 blynk.callbacks[evt] = func
+            def __call__(self):
+                return self.func()
+        return Decorator
+
+    #ON2 sends the pin # as the first argument of the callback
+    def ON2(blynk, evt):
+        class Decorator:
+            def __init__(self, func):
+                self.func = func
+                blynk.callbacks2[evt] = func
             def __call__(self):
                 return self.func()
         return Decorator
@@ -89,10 +100,15 @@ class BlynkProtocol:
     def on(self, evt, func):
         self.callbacks[evt] = func
 
+    def on2(self, evt, func):
+        self.callbacks2[evt] = func
+
     def emit(self, evt, *a, **kv):
         self.log("Event:", evt, "->", *a)
         if evt in self.callbacks:
             self.callbacks[evt](*a, **kv)
+        if evt in self.callbacks2:
+            self.callbacks2[evt](evt, *a, **kv)
 
     def virtual_write(self, pin, *val):
         self._send(MSG_HW, 'vw', pin, *val)
