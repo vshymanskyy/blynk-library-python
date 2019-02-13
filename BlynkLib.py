@@ -127,7 +127,7 @@ class BlynkProtocol:
             data = b''
             dlen = args[0]
         else:
-            data = ('\0'.join(map(str, args))).encode('ascii')
+            data = ('\0'.join(map(str, args))).encode('utf8')
             dlen = len(data)
         
         self.log('<', cmd, id, '|', *args)
@@ -178,7 +178,10 @@ class BlynkProtocol:
                         self.state = CONNECTED
                         dt = now - self.lastSend
                         self._send(MSG_INTERNAL, 'ver', _VERSION, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python')
-                        self.emit('connected', ping=dt)
+                        try:
+                            self.emit('connected', ping=dt)
+                        except TypeError:
+                            self.emit('connected')
                     else:
                         if dlen == STA_INVALID_TOKEN:
                             print("Invalid auth token")
@@ -193,7 +196,7 @@ class BlynkProtocol:
                 data = self.bin[5:5+dlen]
                 self.bin = self.bin[5+dlen:]
 
-                args = list(map(lambda x: x.decode('ascii'), data.split(b'\0')))
+                args = list(map(lambda x: x.decode('utf8'), data.split(b'\0')))
 
                 self.log('>', cmd, i, '|', ','.join(args))
                 if cmd == MSG_PING:
@@ -201,8 +204,10 @@ class BlynkProtocol:
                 elif cmd == MSG_HW or cmd == MSG_BRIDGE:
                     if args[0] == 'vw':
                         self.emit("V"+args[1], args[2:])
+                        self.emit("V*", args[1], args[2:])
                     elif args[0] == 'vr':
                         self.emit("readV"+args[1])
+                        self.emit("readV*", args[1])
                 elif cmd == MSG_INTERNAL:
                     self.emit("int_"+args[1], args[2:])
                 else:

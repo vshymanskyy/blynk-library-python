@@ -15,6 +15,7 @@ This example shows how to use advanced functions of Blynk library:
 - custom server
 - changing heartbeat
 - connected/disconnected events
+- generic virtual pin events
 """
 
 from __future__ import print_function
@@ -37,6 +38,15 @@ def blynk_connected(ping):
 @blynk.ON("disconnected")
 def blynk_disconnected():
     print('Blynk disconnected')
+
+@blynk.ON("V*")
+def blynk_handle_vpins(pin, value):
+    print("V{} value: {}".format(pin, value))
+
+@blynk.ON("readV*")
+def blynk_handle_vpins_read(pin):
+    print("Server asks a value for V{}".format(pin))
+    blynk.virtual_write(pin, 0)
 
 while True:
     blynk.run()
