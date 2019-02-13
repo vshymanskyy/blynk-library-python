@@ -1,6 +1,4 @@
-# blynk-library-python
-
-**Warning:** Work in progress. Code reviews and contributions are more than welcome!
+# Python client for Blynk
 
 [![GitHub version](https://img.shields.io/github/release/vshymanskyy/blynk-library-python.svg)](https://github.com/vshymanskyy/blynk-library-python/releases/latest)
 [![GitHub download](https://img.shields.io/github/downloads/vshymanskyy/blynk-library-python/total.svg)](https://github.com/vshymanskyy/blynk-library-python/releases/latest)
@@ -58,32 +56,27 @@ while True:
     blynk.run()
 ```
 
-## Installation
+
+## Features
+- Python 2, Python 3, MicroPython support
+- Windows, Linux, OSX
+- `virtual_write`
+- `sync_virtual`
+- `set_property`
+- `notify`
+- `log_event`
+- events: `Vn`, `readVn`, `connected`, `disconnected`
+- can run on embedded hardware, like `ESP32`, or `OpenWrt`
+
+## Ubuntu/Linux/Raspberry Pi installation
 
 ```sh
 pip install blynk-library-python
 ```
 
-## Features
-- Python 2 and Python 3
-- Windows, Linux, OSX
-- Micropython (PyCom WiPy, LoPy)
-- Virtual pins (see examples)
+## ESP32 installation
 
-
-## Notes
-
-For some devices (like PyCom WiPy) you need to setup internet connection first:
-```py
-from network import WLAN
-
-WIFI_SSID = 'YourWiFiNetwork'
-WIFI_AUTH = (WLAN.WPA2, 'YourWiFiPassword')
-
-wlan = WLAN(mode=WLAN.STA)
-wlan.connect(WIFI_SSID, auth=WIFI_AUTH, timeout=5000)
-print(wlan.ifconfig())
-```
+`TODO`
 
 __________
 
