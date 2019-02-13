@@ -27,6 +27,7 @@ MSG_HW_SYNC = const(16)
 MSG_INTERNAL = const(17)
 MSG_PROPERTY = const(19)
 MSG_HW = const(20)
+MSG_HW_LOGIN = const(29)
 MSG_EVENT_LOG = const(64)
 
 MSG_REDIRECT  = const(41)  # TODO: not implemented
@@ -137,7 +138,7 @@ class BlynkProtocol:
         (self.lastRecv, self.lastSend, self.lastPing) = (gettime(), 0, 0)
         self.bin = b""
         self.state = CONNECTING
-        self._send(MSG_LOGIN, self.auth)
+        self._send(MSG_HW_LOGIN, self.auth)
 
     def disconnect(self):
         if self.state == DISCONNECTED: return
