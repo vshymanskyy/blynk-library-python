@@ -130,7 +130,7 @@ class BlynkProtocol:
         self.log('<', cmd, id, '|', *args)
         msg = struct.pack("!BHH", cmd, id, dlen) + data
         self.lastSend = gettime()
-        self._send(msg)
+        self._write(msg)
 
     def connect(self):
         if self.state != DISCONNECTED: return
@@ -221,7 +221,7 @@ class Blynk(BlynkProtocol):
         except:
             raise ValueError('Connection with the Blynk servers failed')
 
-    def _send(self, data):
+    def _write(self, data):
         self.conn.send(data)
         # TODO: handle disconnect
 
