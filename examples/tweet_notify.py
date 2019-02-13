@@ -21,17 +21,15 @@ In your Blynk App project:
 """
 
 import BlynkLib
-import time
 
 BLYNK_AUTH = 'YourAuthToken'
 
 # initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-# to register virtual pins first define a handler
 @blynk.VIRTUAL_WRITE(4)
 def v4_write_handler(value):
-    if value: # is the the button is pressed?
+    if value[0]:   # is the the button is pressed?
         blynk.notify('You pressed the button and I know it ;)')
         blynk.tweet('My IoT project is tweeting using @blynk_app and it’s awesome! #IoT #blynk')
 
