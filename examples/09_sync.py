@@ -15,7 +15,7 @@ import BlynkLib
 
 BLYNK_AUTH = 'YourAuthToken'
 
-# initialize Blynk with security enabled
+# initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 @blynk.ON("connected")
