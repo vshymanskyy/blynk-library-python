@@ -1,4 +1,4 @@
-# Copyright (c) 2015-2018 Volodymyr Shymanskyy. See the file LICENSE for copying permission.
+# Copyright (c) 2015-2019 Volodymyr Shymanskyy. See the file LICENSE for copying permission.
 
 _VERSION = "0.2.0"
 
@@ -105,6 +105,9 @@ class BlynkProtocol:
     def notify(self, msg):
         self._send(MSG_NOTIFY, msg)
 
+    def tweet(self, msg):
+        self._send(MSG_TWEET, msg)
+
     def log_event(self, event, descr=None):
         if descr==None:
             self._send(MSG_EVENT_LOG, event)
@@ -210,16 +213,18 @@ import socket
 
 class Blynk(BlynkProtocol):
     def __init__(self, auth, **kwargs):
+        self.server = kwargs.pop('server', 'blynk-cloud.com')
+        self.port = kwargs.pop('port', 80)
         BlynkProtocol.__init__(self, auth, **kwargs)
 
     def connect(self):
         try:
             self.conn = socket.socket()
-            self.conn.connect(socket.getaddrinfo("blynk-cloud.com", 80)[0][4])
+            self.conn.connect(socket.getaddrinfo(self.server, self.port)[0][4])
             self.conn.settimeout(0.05)
             BlynkProtocol.connect(self)
         except:
-            raise ValueError('Connection with the Blynk servers failed')
+            raise ValueError('Connection with the Blynk server %s:%d failed' % (self.server, self.port))
 
     def _write(self, data):
         self.conn.send(data)
