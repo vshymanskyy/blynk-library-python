@@ -18,12 +18,16 @@ BLYNK_AUTH = 'YourAuthToken'
 # initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
+@blynk.ON("V*")
+def blynk_handle_vpins(pin, value):
+    print("V{} value: {}".format(pin, value))
+
 @blynk.ON("connected")
 def blynk_connected():
     # You can also use blynk.sync_virtual(pin)
     # to sync a specific virtual pin
-    print("Updating all values from the server...")
-    blynk.sync_all()
+    print("Updating V1,V2,V3 values from the server...")
+    blynk.sync_virtual(1,2,3)
 
 while True:
     blynk.run()
