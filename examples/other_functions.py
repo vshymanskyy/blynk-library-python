@@ -24,8 +24,8 @@ BLYNK_AUTH = 'YourAuthToken'
 
 # Initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH,
-                       server='my-server.com', # set server address
-                       port=9442,              # set server port
+                       server='blynk-cloud.com', # set server address
+                       port=8442,              # set server port
                        heartbeat=30,           # set heartbeat to 30 secs
                        log=print               # use print function for debug logging
                        )
