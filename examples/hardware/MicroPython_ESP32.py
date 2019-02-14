@@ -10,17 +10,8 @@ projects by simply dragging and dropping widgets.
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
 
-This example shows one of the simplest scripts,
-that doesn't define any custom behaviour.
-You're still able to do direct pin operations.
-
-NOTE: You have to use the WiPy-specific Blynk library:
-  https://github.com/wipy/wipy
-
-In your Blynk App project:
-  Add a Gauge widget,  bind it to Analog Pin 5.
-  Add a Slider widget, bind it to Digital Pin 25.
-  Run the App (green triangle in the upper right corner).
+This example shows how to initialize your ESP32 board
+and connect it to Blynk.
 
 Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 """
