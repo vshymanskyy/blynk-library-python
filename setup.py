@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name         = "blynk-library-python",
-    version      = "0.1.3", #blynk.lib.__version__
+    version      = "0.2.0", #blynk.lib.__version__
     description  = "Blynk library",
     platforms    = "any",
     url          = "http://www.blynk.cc",
