@@ -87,7 +87,7 @@ pip install blynk-library-python
     ampy put ./examples/hardware/ESP8266_ESP32.py main.py
     ```
   **Note:** LoBo firmware stores files uder `/flash` directory, use `ampy mkdir /flash/lib` and so on
-- Open device terminal and reboot the board (or type `import main`)
+- Open device terminal and reboot the board (or type `execfile('main.py')`)
 
 __________
 
