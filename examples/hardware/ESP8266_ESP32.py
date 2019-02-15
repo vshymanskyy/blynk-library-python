@@ -32,7 +32,7 @@ wifi.connect(WIFI_SSID, WIFI_PASS)
 while not wifi.isconnected():
     pass
 
-print('IP: ' + wifi.ifconfig()[0])
+print('IP: ', wifi.ifconfig()[0])
 
 print("Connecting to Blynk...")
 blynk = BlynkLib.Blynk(BLYNK_AUTH)

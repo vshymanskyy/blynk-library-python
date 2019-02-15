@@ -10,7 +10,7 @@ projects by simply dragging and dropping widgets.
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
 
-This example shows how to initialize your PyCom board
+This example shows how to initialize your WiPy 1.0 board
 and connect it to Blynk.
 
 Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
@@ -18,22 +18,32 @@ Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 
 import BlynkLib
 from network import WLAN
+import machine
 
 WIFI_SSID = 'YourWiFiNetwork'
-WIFI_AUTH = (WLAN.WPA2, 'YourWiFiPassword')
+WIFI_PASS = 'YourWiFiPassword'
 
 BLYNK_AUTH = 'YourAuthToken'
 
-# Connect to WiFi
+print("Connecting to WiFi...")
 wifi = WLAN(mode=WLAN.STA)
-wifi.connect(WIFI_SSID, auth=WIFI_AUTH)
+wifi.connect(ssid=WIFI_SSID, auth=(WLAN.WPA2, WIFI_PASS))
 while not wifi.isconnected():
     pass
 
-print(wifi.ifconfig())
+print('IP: ', wifi.ifconfig()[0])
 
-# Initialize Blynk
+print("Connecting to Blynk...")
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-while True:
-    blynk.run()
+@blynk.ON("connected")
+def blynk_connected(ping):
+    print('Blynk ready. Ping:', ping, 'ms')
+
+def runLoop():
+    while True:
+        blynk.run()
+        machine.idle()
+
+# Run blynk in the main thread:
+runLoop()
