@@ -63,10 +63,10 @@ while True:
 - `virtual_write`
 - `sync_virtual`
 - `set_property`
-- `notify`
+- `notify`, `tweet`
 - `log_event`
 - events: `Vn`, `readVn`, `connected`, `disconnected`
-- can run on embedded hardware, like `ESP32`, or `OpenWrt`
+- can run on embedded hardware, like `ESP8266`, `ESP32`, or `OpenWrt`
 
 ## Ubuntu/Linux/Raspberry Pi installation
 
@@ -74,9 +74,18 @@ while True:
 pip install blynk-library-python
 ```
 
-## ESP32 installation
+## ESP8266/ESP32 installation
 
-`TODO`
+- Get the latest MicroPython firmware and flash it to your board
+- Edit [ESP8266_ESP32.py](examples/hardware/ESP8266_ESP32.py) example (put your `auth token` and wifi credentials)
+- Use `ampy` or any other method to transfer files to the device.  
+    ```sh
+    export AMPY_PORT=/dev/ttyUSB0
+    ampy mkdir /lib
+    ampy put BlynkLib.py /lib/BlynkLib.py
+    ampy put ./examples/hardware/ESP8266_ESP32.py main.py
+    ```
+- Open device terminal and reboot the board (or type `import main`)
 
 __________
 
