@@ -10,28 +10,39 @@ projects by simply dragging and dropping widgets.
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
 
-This example shows how to initialize your WiPy board
-and connect it to Blynk.
+This example shows how to initialize your ESP32 board
+and connect it to Blynk using a Cellular modem.
 
-Don't forget to change WIFI_SSID, WIFI_PASS and BLYNK_AUTH ;)
+Read more about LoBo GSM module here:
+  https://github.com/loboris/MicroPython_ESP32_psRAM_LoBo/wiki/gsm
+
+Don't forget to change TX/RX pins, APN, user, password and BLYNK_AUTH ;)
 """
 
 import BlynkLib
-from network import WLAN
+import gsm
 import machine, time
-
-WIFI_SSID = 'YourWiFiNetwork'
-WIFI_PASS = 'YourWiFiPassword'
 
 BLYNK_AUTH = 'YourAuthToken'
 
-print("Connecting to WiFi...")
-wifi = WLAN(mode=WLAN.STA)
-wifi.connect(ssid=WIFI_SSID, auth=(WLAN.WPA2, WIFI_PASS))
-while not wifi.isconnected():
-    time.sleep_ms(50)
+gsm.start(tx=27, rx=26, apn='', user='', password='')
 
-print('IP:', wifi.ifconfig()[0])
+for retry in range(10):
+    if gsm.atcmd('AT'):
+        break
+    else:
+        print("Waiting modem")
+        time.sleep_ms(5000)
+else:
+    raise Exception("Modem not responding!")
+
+print("Connecting to GSM...")
+gsm.connect()
+
+while gsm.status()[0] != 1:
+    pass
+
+print('IP:', gsm.ifconfig()[0])
 
 print("Connecting to Blynk...")
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
@@ -47,3 +58,8 @@ def runLoop():
 
 # Run blynk in the main thread:
 runLoop()
+
+# Or, run blynk in a separate thread (unavailable for esp8266):
+#import _thread
+#_thread.stack_size(5*1024)
+#_thread.start_new_thread("Blynk", runLoop, ())
