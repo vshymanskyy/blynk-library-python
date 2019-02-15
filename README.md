@@ -76,7 +76,8 @@ pip install blynk-library-python
 
 ## ESP8266/ESP32 installation
 
-- Get the latest MicroPython firmware and flash it to your board
+- Get the latest [MicroPython](https://micropython.org/download) firmware and flash it to your board  
+  **Note:** for ESP32 you can also try [LoBo](https://github.com/loboris/MicroPython_ESP32_psRAM_LoBo/wiki/firmwares) firmware
 - Edit [ESP8266_ESP32.py](examples/hardware/ESP8266_ESP32.py) example (put your `auth token` and wifi credentials)
 - Use `ampy` or any other method to transfer files to the device.  
     ```sh
