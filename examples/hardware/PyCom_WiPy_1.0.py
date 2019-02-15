@@ -10,7 +10,7 @@ projects by simply dragging and dropping widgets.
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
 
-This example shows how to initialize your WiPy 1.0 board
+This example shows how to initialize your WiPy board
 and connect it to Blynk.
 
 Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
@@ -18,7 +18,7 @@ Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
 
 import BlynkLib
 from network import WLAN
-import machine
+import machine, time
 
 WIFI_SSID = 'YourWiFiNetwork'
 WIFI_PASS = 'YourWiFiPassword'
@@ -29,7 +29,7 @@ print("Connecting to WiFi...")
 wifi = WLAN(mode=WLAN.STA)
 wifi.connect(ssid=WIFI_SSID, auth=(WLAN.WPA2, WIFI_PASS))
 while not wifi.isconnected():
-    pass
+    time.sleep_ms(50)
 
 print('IP: ', wifi.ifconfig()[0])
 
