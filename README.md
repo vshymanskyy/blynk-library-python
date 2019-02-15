@@ -89,6 +89,10 @@ pip install blynk-library-python
   **Note:** LoBo firmware stores files uder `/flash` directory, use `ampy mkdir /flash/lib` and so on
 - Open device terminal and reboot the board (or type `execfile('main.py')`)
 
+## PyCom installation
+- This should work with WiPy 1.0, 2.0, 3.0, LoPy, SiPy, GPy, FiPy
+- Instructions are the same as for ESP32, just use [PyCom_WiPy.py](examples/hardware/PyCom_WiPy.py) example
+
 __________
 
 ### Implementations for other platforms
