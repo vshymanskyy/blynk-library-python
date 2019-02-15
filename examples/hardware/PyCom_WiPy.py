@@ -13,7 +13,7 @@ projects by simply dragging and dropping widgets.
 This example shows how to initialize your WiPy board
 and connect it to Blynk.
 
-Don't forget to change WIFI_SSID, WIFI_AUTH and BLYNK_AUTH ;)
+Don't forget to change WIFI_SSID, WIFI_PASS and BLYNK_AUTH ;)
 """
 
 import BlynkLib
