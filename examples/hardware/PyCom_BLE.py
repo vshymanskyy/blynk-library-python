@@ -1,10 +1,14 @@
+"""
+    THIS EXAMPLE IS NOT FINISHED YET.
+(You can use this for educational purposes)
+"""
 
 from network import Bluetooth
 from binascii import unhexlify
 from BlynkLib import BlynkProtocol
 import machine, time
 
-BLYNK_AUTH = "eb815d9fb6714872a2fcf4ef3736a645"
+BLYNK_AUTH = "YourAuthToken"
 
 def unhex(s):
     return bytes(reversed(unhexlify(s.replace('-',''))))
