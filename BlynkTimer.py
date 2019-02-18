@@ -14,7 +14,7 @@ class BlynkTimer:
     '''Executes functions after a defined period of time'''
     _MAX_TIMERS = 16
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         self.timers = []
         self.ids = self._get_unique_id()
 
@@ -83,7 +83,7 @@ class BlynkTimer:
         return timerId
 
     def run(self):
-        '''Starts Timers'''
+        '''Polls timers'''
         [t.run() for t in self.timers]
 
 
