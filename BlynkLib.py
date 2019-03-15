@@ -210,7 +210,7 @@ class BlynkProtocol:
                         self.emit("readV"+args[1])
                         self.emit("readV*", args[1])
                 elif cmd == MSG_INTERNAL:
-                    self.emit("int_"+args[1], args[2:])
+                    self.emit("int_"+args[0], args[1:])
                 else:
                     print("Unexpected command: ", cmd)
                     return self.disconnect()
