@@ -12,7 +12,7 @@ setup(
     author       = "Volodymyr Shymanskyy",
     author_email = "vshymanskyi@gmail.com",
 
-    py_modules   = ['BlynkLib'],
+    py_modules   = ['BlynkLib', 'BlynkTimer'],
 
     classifiers  = [
         "Topic :: Software Development :: Libraries :: Python Modules",
