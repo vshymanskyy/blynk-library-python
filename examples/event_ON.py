@@ -63,7 +63,6 @@ def blynk_handle_vpins_read(pin):
     # pin 12 used to display 12*12
     elif (pin == '12'):
         value = '{}'.format(12*12)
-        value = '{0:.1f}'.format(probe1.data_average)
         blynk.virtual_write(12, value)
 
 
