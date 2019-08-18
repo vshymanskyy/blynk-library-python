@@ -24,7 +24,7 @@ BLYNK_AUTH = 'YourAuthToken'
 # initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-@blynk.VIRTUAL_WRITE(3)
+@blynk.on("V3")
 def v3_write_handler(value):
     # execute the command echo it back
     blynk.virtual_write(3, 'Command: ' + value + '\n')

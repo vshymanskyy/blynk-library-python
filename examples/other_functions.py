@@ -31,19 +31,19 @@ blynk = BlynkLib.Blynk(BLYNK_AUTH,
                        log=print               # use print function for debug logging
                        )
 
-@blynk.ON("connected")
+@blynk.on("connected")
 def blynk_connected(ping):
     print('Blynk ready. Ping:', ping, 'ms')
 
-@blynk.ON("disconnected")
+@blynk.on("disconnected")
 def blynk_disconnected():
     print('Blynk disconnected')
 
-@blynk.ON("V*")
+@blynk.on("V*")
 def blynk_handle_vpins(pin, value):
     print("V{} value: {}".format(pin, value))
 
-@blynk.ON("readV*")
+@blynk.on("readV*")
 def blynk_handle_vpins_read(pin):
     print("Server asks a value for V{}".format(pin))
     blynk.virtual_write(pin, 0)

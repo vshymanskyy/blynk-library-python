@@ -30,7 +30,7 @@ BLYNK_AUTH = 'YourAuthToken'
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 # Register virtual pin handler
-@blynk.VIRTUAL_WRITE(3)
+@blynk.on("V3")
 def v3_write_handler(value):
     print('Current slider value: {}'.format(value[0]))
 

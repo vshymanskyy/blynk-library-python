@@ -27,7 +27,7 @@ BLYNK_AUTH = 'YourAuthToken'
 # initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-@blynk.VIRTUAL_WRITE(4)
+@blynk.on("V4")
 def v4_write_handler(value):
     if value[0]:   # is the the button is pressed?
         blynk.notify('You pressed the button and I know it ;)')

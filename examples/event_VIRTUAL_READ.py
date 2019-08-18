@@ -31,7 +31,7 @@ BLYNK_AUTH = 'YourAuthToken'
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 # Register virtual pin handler
-@blynk.VIRTUAL_READ(2)
+@blynk.on("readV2")
 def v2_read_handler():
     # This widget will show some time in seconds..
     blynk.virtual_write(2, time.ticks_ms() // 1000)

@@ -36,7 +36,7 @@ print('IP:', wifi.ifconfig()[0])
 print("Connecting to Blynk...")
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
-@blynk.ON("connected")
+@blynk.on("connected")
 def blynk_connected(ping):
     print('Blynk ready. Ping:', ping, 'ms')
 

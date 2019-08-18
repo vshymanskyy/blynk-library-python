@@ -70,7 +70,7 @@ class BlynkBLE(BlynkProtocol):
 
 blynk = BlynkBLE(BLYNK_AUTH)
 
-@blynk.ON("connected")
+@blynk.on("connected")
 def blynk_connected(ping):
     print('Blynk ready. Ping:', ping, 'ms')
 
