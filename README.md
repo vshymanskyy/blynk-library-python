@@ -68,7 +68,7 @@ while True:
 - `notify`, `tweet`
 - `log_event`
 - events: `Vn`, `readVn`, `connected`, `disconnected`
-- can run on embedded hardware, like `ESP8266`, `ESP32`, or `OpenWrt`
+- can run on embedded hardware, like `ESP8266`, `ESP32`, `W600` or `OpenWrt`
 
 ## Ubuntu/Linux/Raspberry Pi installation
 
