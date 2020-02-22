@@ -201,6 +201,10 @@ class BlynkProtocol:
                     elif args[0] == 'vr':
                         self.emit("readV"+args[1])
                         self.emit("readV*", args[1])
+                    elif args[0] == 'dw':
+                        if os.uname()[0][0:3] == 'esp': # ESP8266/32
+                            p = machine.Pin(int(args[1]), machine.Pin.OUT)
+                            p.value(int(args[2]))
                 elif cmd == MSG_INTERNAL:
                     self.emit("int_"+args[1], args[2:])
                 else:
