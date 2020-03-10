@@ -4,6 +4,7 @@ _VERSION = "0.2.1"
 
 import struct
 import time
+import sys
 import os
 
 try:
@@ -45,7 +46,7 @@ print("""
    / _ )/ /_ _____  / /__
   / _  / / // / _ \\/  '_/
  /____/_/\\_, /_//_/_/\\_\\
-        /___/ for Python v""" + _VERSION + " (" + os.uname()[0] + ")\n")
+        /___/ for Python v""" + _VERSION + " (" + sys.platform + ")\n")
 
 class BlynkProtocol:
     def __init__(self, auth, heartbeat=10, buffin=1024, log=None):
