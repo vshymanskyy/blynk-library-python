@@ -39,13 +39,22 @@ STA_INVALID_TOKEN = const(9)
 DISCONNECTED = const(0)
 CONNECTING = const(1)
 CONNECTED = const(2)
-
-print("""
-    ___  __          __
-   / _ )/ /_ _____  / /__
-  / _  / / // / _ \\/  '_/
- /____/_/\\_, /_//_/_/\\_\\
-        /___/ for Python v""" + _VERSION + " (" + os.uname()[0] + ")\n")
+#os.uname doesn't work on windows
+try:
+    print("""
+        ___  __          __
+       / _ )/ /_ _____  / /__
+      / _  / / // / _ \\/  '_/
+     /____/_/\\_, /_//_/_/\\_\\
+            /___/ for Python v""" + _VERSION + " (" + os.uname()[0] + ")\n")
+except:
+    print("""
+        ___  __          __
+       / _ )/ /_ _____  / /__
+      / _  / / // / _ \\/  '_/
+     /____/_/\\_, /_//_/_/\\_\\
+            /___/ for Python v""" + _VERSION + "(Windows)\n")
+    
 
 class BlynkProtocol:
     def __init__(self, auth, heartbeat=10, buffin=1024, log=None):
