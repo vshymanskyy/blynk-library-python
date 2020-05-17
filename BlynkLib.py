@@ -31,7 +31,7 @@ MSG_HW = const(20)
 MSG_HW_LOGIN = const(29)
 MSG_EVENT_LOG = const(64)
 
-MSG_REDIRECT  = const(41)  # TODO: not implemented
+MSG_REDIRECT  = const(41)  
 MSG_DBG_PRINT  = const(55) # TODO: not implemented
 
 STA_SUCCESS = const(200)
@@ -134,6 +134,14 @@ class BlynkProtocol:
         self.state = CONNECTING
         self._send(MSG_HW_LOGIN, self.auth)
 
+    def reconnect(self):
+        if self.state == MSG_REDIRECT: return
+        self.bin = b""
+        self.state = MSG_REDIRECT
+        self.emit("reconnecting")
+        self.disconnect()
+        self.connect()
+        
     def disconnect(self):
         if self.state == DISCONNECTED: return
         self.bin = b""
@@ -204,6 +212,10 @@ class BlynkProtocol:
                         self.emit("readV*", args[1])
                 elif cmd == MSG_INTERNAL:
                     self.emit("int_"+args[1], args[2:])
+                elif cmd == MSG_REDIRECT:
+                    self.server = args[0]
+                    self.port = args[1]
+                    self.reconnect() # Reconnecting to the new server + port
                 else:
                     print("Unexpected command: ", cmd)
                     return self.disconnect()
