@@ -134,11 +134,11 @@ class BlynkProtocol:
         self.state = CONNECTING
         self._send(MSG_HW_LOGIN, self.auth)
 
-    def reconnect(self):
+    def redirect(self):
         if self.state == MSG_REDIRECT: return
         self.bin = b""
         self.state = MSG_REDIRECT
-        self.emit("reconnecting")
+        self.emit("redirecting")
         self.disconnect()
         self.connect()
         
@@ -215,7 +215,7 @@ class BlynkProtocol:
                 elif cmd == MSG_REDIRECT:
                     self.server = args[0]
                     self.port = args[1]
-                    self.reconnect() # Reconnecting to the new server + port
+                    self.redirect() # Redirecting to the new server + port
                 else:
                     print("Unexpected command: ", cmd)
                     return self.disconnect()
