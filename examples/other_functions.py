@@ -11,6 +11,7 @@ projects by simply dragging and dropping widgets.
                               http://twitter.com/blynk_app
 
 This example shows how to use advanced functions of Blynk library:
+- insecure connection
 - debug logging
 - custom server
 - changing heartbeat
@@ -25,8 +26,9 @@ BLYNK_AUTH = 'YourAuthToken'
 
 # Initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH,
-                       server='blynk-cloud.com', # set server address
-                       port=8442,              # set server port
+                       insecure=True,          # disable SSL/TLS
+                       server='blynk.cloud',   # set server address
+                       port=80,                # set server port
                        heartbeat=30,           # set heartbeat to 30 secs
                        log=print               # use print function for debug logging
                        )
@@ -42,11 +44,6 @@ def blynk_disconnected():
 @blynk.on("V*")
 def blynk_handle_vpins(pin, value):
     print("V{} value: {}".format(pin, value))
-
-@blynk.on("readV*")
-def blynk_handle_vpins_read(pin):
-    print("Server asks a value for V{}".format(pin))
-    blynk.virtual_write(pin, 0)
 
 while True:
     blynk.run()
