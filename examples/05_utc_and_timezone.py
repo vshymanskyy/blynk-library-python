@@ -10,51 +10,37 @@ projects by simply dragging and dropping widgets.
   Social networks:            http://www.fb.com/blynkapp
                               http://twitter.com/blynk_app
 
-This example shows how to initialize your ESP8266/ESP32 board
-and connect it to Blynk.
-
-Don't forget to change WIFI_SSID, WIFI_PASS and BLYNK_AUTH ;)
+This example shows how to get UTC time and Timezone info
 """
 
 import BlynkLib
-import network
-import machine
-
-WIFI_SSID = 'YourWiFiNetwork'
-WIFI_PASS = 'YourWiFiPassword'
+import time
 
 BLYNK_AUTH = 'YourAuthToken'
 
-wifi = network.WLAN(network.STA_IF)
-if not wifi.isconnected():
-    print("Connecting to WiFi...")
-    wifi.active(True)
-    wifi.connect(WIFI_SSID, WIFI_PASS)
-    while not wifi.isconnected():
-        pass
-
-print('IP:', wifi.ifconfig()[0])
-
+# Initialize Blynk
 blynk = BlynkLib.Blynk(BLYNK_AUTH)
 
 @blynk.on("connected")
 def blynk_connected(ping):
     print('Blynk ready. Ping:', ping, 'ms')
+    blynk.send_internal("utc", "time")
+    blynk.send_internal("utc", "tz_name")
 
 @blynk.on("disconnected")
 def blynk_disconnected():
     print('Blynk disconnected')
 
-def runLoop():
-    while True:
-        blynk.run()
-        machine.idle()
+@blynk.on("internal:utc")
+def on_utc(value):
+    if value[0] == "time":
+        ts = int(value[1])//1000
+        # on embedded systems, you may need to subtract time difference between 1970 and 2000
+        #ts -= 946684800
+        tm = time.gmtime(ts)
+        print("UTC time: ", time.asctime(tm))
+    elif value[0] == "tz_name":
+        print("Timezone: ", value[1])
 
-# Run blynk in the main thread
-runLoop()
-
-# You can also run blynk in a separate thread (ESP32 only)
-#import _thread
-#_thread.stack_size(5*1024)
-#_thread.start_new_thread(runLoop, ())
-
+while True:
+    blynk.run()

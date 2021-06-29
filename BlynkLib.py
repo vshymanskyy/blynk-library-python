@@ -207,6 +207,11 @@ class BlynkProtocol(EventEmitter):
 
 import socket
 
+try:
+    SOCK_TIMEOUT = eval('0.05')
+except:
+    SOCK_TIMEOUT = 0
+
 class Blynk(BlynkProtocol):
     def __init__(self, auth, **kwargs):
         self.insecure = kwargs.pop('insecure', False)
@@ -223,38 +228,37 @@ class Blynk(BlynkProtocol):
 
     def connect(self):
         print('Connecting to %s:%d...' % (self.server, self.port))
+        s = socket.socket()
+        s.connect(socket.getaddrinfo(self.server, self.port)[0][-1])
         try:
-            s = socket.socket()
-            s.connect(socket.getaddrinfo(self.server, self.port)[0][4])
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-            if self.insecure:
-                self.conn = s
-            else:
-                try:
-                    import ssl
-                    ssl_context = ssl.create_default_context()
-                    self.conn = ssl_context.wrap_socket(sock=s, server_hostname=self.server)
-                except ImportError:
-                    import ussl
-                    self.conn = ussl.wrap_socket(s, server_hostname=self.server)
-
-            try:
-                self.conn.settimeout(eval('0.05'))
-            except:
-                self.conn.settimeout(0)
-            BlynkProtocol.connect(self)
         except:
-            raise Exception('Connection with the Blynk server %s:%d failed' % (self.server, self.port))
+            pass
+        if self.insecure:
+            self.conn = s
+        else:
+            try:
+                import ussl
+                ssl_context = ussl
+            except ImportError:
+                import ssl
+                ssl_context = ssl.create_default_context()
+            self.conn = ssl_context.wrap_socket(s, server_hostname=self.server)
+        try:
+            self.conn.settimeout(SOCK_TIMEOUT)
+        except:
+            s.settimeout(SOCK_TIMEOUT)
+        BlynkProtocol.connect(self)
 
     def _write(self, data):
         #print('<', data.hex())
-        self.conn.send(data)
+        self.conn.write(data)
         # TODO: handle disconnect
 
     def run(self):
         data = b''
         try:
-            data = self.conn.recv(self.buffin)
+            data = self.conn.read(self.buffin)
             #print('>', data.hex())
         except KeyboardInterrupt:
             raise
