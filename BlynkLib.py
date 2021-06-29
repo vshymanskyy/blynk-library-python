@@ -10,9 +10,11 @@ import os
 try:
     import machine
     gettime = lambda: time.ticks_ms()
+    SOCK_TIMEOUT = 0
 except ImportError:
     const = lambda x: x
     gettime = lambda: int(time.time() * 1000)
+    SOCK_TIMEOUT = 0.05
 
 def dummy(*args):
     pass
@@ -158,7 +160,7 @@ class BlynkProtocol(EventEmitter):
                     if dlen == STA_SUCCESS:
                         self.state = CONNECTED
                         dt = now - self.lastSend
-                        info = ['ver', __version__, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', 'python']
+                        info = ['ver', __version__, 'h-beat', self.heartbeat//1000, 'buff-in', self.buffin, 'dev', sys.platform+'-py']
                         if self.tmpl_id:
                             info.extend(['tmpl', self.tmpl_id])
                             info.extend(['fw-type', self.tmpl_id])
@@ -207,11 +209,6 @@ class BlynkProtocol(EventEmitter):
 
 import socket
 
-try:
-    SOCK_TIMEOUT = eval('0.05')
-except:
-    SOCK_TIMEOUT = 0
-
 class Blynk(BlynkProtocol):
     def __init__(self, auth, **kwargs):
         self.insecure = kwargs.pop('insecure', False)
@@ -251,7 +248,7 @@ class Blynk(BlynkProtocol):
         BlynkProtocol.connect(self)
 
     def _write(self, data):
-        #print('<', data.hex())
+        #print('<', data)
         self.conn.write(data)
         # TODO: handle disconnect
 
@@ -259,10 +256,10 @@ class Blynk(BlynkProtocol):
         data = b''
         try:
             data = self.conn.read(self.buffin)
-            #print('>', data.hex())
+            #print('>', data)
         except KeyboardInterrupt:
             raise
         except: # TODO: handle disconnect
-            pass
+            return
         self.process(data)
 
