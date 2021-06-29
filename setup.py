@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name         = "blynk-library-python",
-    version      = "0.2.0", #blynk.lib.__version__
+    version      = "1.0.0", #blynk.lib.__version__
     description  = "Blynk library",
     platforms    = "any",
     url          = "http://www.blynk.cc",
@@ -12,7 +12,7 @@ setup(
     author       = "Volodymyr Shymanskyy",
     author_email = "vshymanskyi@gmail.com",
 
-    py_modules   = ['BlynkLib', 'BlynkTimer'],
+    py_modules   = ['BlynkLib', 'BlynkEdgent', 'BlynkTimer'],
 
     classifiers  = [
         "Topic :: Software Development :: Libraries :: Python Modules",
