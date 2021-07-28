@@ -196,9 +196,6 @@ class BlynkProtocol(EventEmitter):
                     if args[0] == 'vw':
                         self.emit("V"+args[1], args[2:])
                         self.emit("V*", args[1], args[2:])
-                    elif args[0] == 'vr':
-                        self.emit("readV"+args[1])
-                        self.emit("readV*", args[1])
                 elif cmd == MSG_INTERNAL:
                     self.emit("internal:"+args[0], args[1:])
                 elif cmd == MSG_REDIRECT:

@@ -1,4 +1,7 @@
-# Python client for Blynk
+# Python client for Blynk IoT
+
+**Note:** The library has been updated for Blynk 2.0.  
+Please remain on `v0.2.0` for legacy Blynk.
 
 [![GitHub version](https://img.shields.io/github/release/vshymanskyy/blynk-library-python.svg)](https://github.com/vshymanskyy/blynk-library-python/releases/latest)
 [![GitHub download](https://img.shields.io/github/downloads/vshymanskyy/blynk-library-python/total.svg)](https://github.com/vshymanskyy/blynk-library-python/releases/latest)
@@ -65,9 +68,8 @@ while True:
 - `virtual_write`
 - `sync_virtual`
 - `set_property`
-- `notify`, `tweet`
 - `log_event`
-- events: `Vn`, `readVn`, `connected`, `disconnected`
+- events: `Vn`, `connected`, `disconnected`, `invalid_auth`
 - can run on embedded hardware, like `ESP8266`, `ESP32`, `W600` or `OpenWrt`
 
 ## Ubuntu/Linux/Raspberry Pi installation
@@ -76,7 +78,9 @@ while True:
 pip install blynk-library-python
 ```
 
-## ESP8266/ESP32 installation
+For Blynk.Edgent Dynamic provisioning, please see `examples/Edgent_Linux_RPi`
+
+## ESP32/ESP8266 installation
 
 - Get the latest [MicroPython](https://micropython.org/download) firmware and flash it to your board  
   **Note:** for ESP32 you can also try [LoBo](https://github.com/loboris/MicroPython_ESP32_psRAM_LoBo/wiki/firmwares) firmware
@@ -90,6 +94,10 @@ pip install blynk-library-python
     ```
   **Note:** LoBo firmware stores files uder `/flash` directory, use `ampy mkdir /flash/lib` and so on
 - Open device terminal and reboot the board (or type `execfile('main.py')`)
+- For ESP8266, you may need to disable secure connection using:
+    ```py
+    blynk = BlynkLib.Blynk('YourAuthToken', insecure=True)
+    ```
 
 ## PyCom installation
 - This should work with WiPy 1.0, 2.0, 3.0, LoPy, SiPy, GPy, FiPy
