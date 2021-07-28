@@ -21,7 +21,7 @@ try:
         config = json.load(jsonFile)
     needToSave = False
 except:
-    config = BlynkEdgent.provision(BLYNK_DEVICE_NAME, BLYNK_TEMPLATE_ID, BLYNK_FIRMWARE_VERSION, prefix="Beemate")
+    config = BlynkEdgent.provision(BLYNK_DEVICE_NAME, BLYNK_TEMPLATE_ID, BLYNK_FIRMWARE_VERSION)
     needToSave = True
 
 def reset_config():

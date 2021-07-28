@@ -1,26 +1,3 @@
-"""
- [x] WiFi AP
-   [x] HTTP server
-   [x] HTTP handlers
-   [x] Get own MAC (BSSID)
-   [ ] OTA update (from app)
- [x] WiFi Scanner
- [x] WiFi STA
-   [x] Set hostname
-   [ ] Static IP support
-   [ ] Detect auth failure (wrong password?)
- [ ] Save/Load config
- [ ] Reset button -> Config mode
- [ ] Indicator
- [ ] Enter config mode on invalid auth
- [ ] Report last error
-
-PolKit configuration (if necessary)
-https://askubuntu.com/questions/668411/failed-to-add-activate-connection-32-insufficient-privileges/752168#752168
-
-Manual wifi config:
-https://unix.stackexchange.com/questions/145366/how-to-connect-to-an-802-1x-wireless-network-via-nmcli
-"""
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qsl
@@ -29,9 +6,6 @@ import sys, time
 import nmcli
 import json
 import binascii
-
-import os
-os.system('sudo iptables -A PREROUTING -t nat -p tcp --dport 80 -j REDIRECT --to-ports 11080')
 
 def log(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -121,29 +95,25 @@ class HTTPHandler(BaseHTTPRequestHandler):
         elif o.path == "/wifi_scan.json":
             self._reply_json(self.server.wifi_networks)
         elif o.path == "/config":
-            q["auth"] = q.pop("blynk")
+            q["auth"]   = q.pop("blynk")
             q["server"] = q.pop("host")
+            q["port"]   = int(q.pop("port"))
+            q["port_ssl"] = int(q.pop("port_ssl"))
             if "save" in q:
                 self._reply_json({"status":"ok","msg":"Configuration saved"})
             else:
                 self._reply_json({"status":"ok","msg":"Trying to connect..."})
             self.server.blynk_config = q
-        elif o.path == "/reset":
-            self._reply_json({"status":"ok","msg":"Configuration reset"})
-            self.server.blynk_config = { "cmd": "reset" }
-        elif o.path == "/reboot":
-            self._reply_json({"status":"ok"})
-            self.server.blynk_config = { "cmd": "reboot" }
         else:
             self.send_error(404)
 
-def provision(board, tmpl_id, fw_ver):
+def provision(board, tmpl_id, fw_ver, prefix = "Blynk"):
     wifi = WiFi()
 
     wifi_networks = wifi.scan()
 
     suffix = format(binascii.crc32(wifi.mac_address().encode() * 4) & 0xFFFFF, 'X')
-    my_ssid = "Blynk " + board + "-" + suffix
+    my_ssid = prefix + " " + board + "-" + suffix
 
     config = None
     try:
@@ -161,6 +131,8 @@ def provision(board, tmpl_id, fw_ver):
             }
             httpd.wifi_networks = wifi_networks
             httpd.blynk_config = None
+
+            log("Waiting for Blynk App connection...")
             while httpd.blynk_config is None:
                 httpd.handle_request()
             config = httpd.blynk_config
