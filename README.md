@@ -23,16 +23,13 @@ Blynk is **the most popular IoT platform** used by design studios, makers, educa
 
 ## Download
 
-**Blynk App: 
-[<img src="https://cdn.rawgit.com/simple-icons/simple-icons/develop/icons/googleplay.svg" width="18" height="18" /> Google Play](https://play.google.com/store/apps/details?id=cc.blynk) | 
-[<img src="https://cdn.rawgit.com/simple-icons/simple-icons/develop/icons/apple.svg" width="18" height="18" /> App Store](https://itunes.apple.com/us/app/blynk-control-arduino-raspberry/id808760481?ls=1&mt=8)**
-
-**Blynk [Server](https://github.com/blynkkk/blynk-server)**
+**Blynk Mobile App:
+[<img src="https://cdn.rawgit.com/simple-icons/simple-icons/develop/icons/googleplay.svg" width="18" height="18" /> Google Play](https://play.google.com/store/apps/details?id=cloud.blynk) | 
+[<img src="https://cdn.rawgit.com/simple-icons/simple-icons/develop/icons/apple.svg" width="18" height="18" /> App Store](https://apps.apple.com/us/app/blynk-iot/id1559317868)**
 
 ## Documentation
 Social: [Webpage](http://www.blynk.cc) / [Facebook](http://www.fb.com/blynkapp) / [Twitter](http://twitter.com/blynk_app) / [Kickstarter](https://www.kickstarter.com/projects/167134865/blynk-build-an-app-for-your-arduino-project-in-5-m/description)  
-Help Center: http://help.blynk.cc  
-Documentation: http://docs.blynk.cc/#blynk-firmware  
+Documentation: https://docs.blynk.io  
 Community Forum: http://community.blynk.cc  
 Examples Browser: http://examples.blynk.cc  
 Blynk for Business: http://www.blynk.io
@@ -78,12 +75,11 @@ while True:
 pip install blynk-library-python
 ```
 
-For Blynk.Edgent Dynamic provisioning, please see `examples/Edgent_Linux_RPi`
+For **Blynk.Edgent Dynamic Provisioning**, please see `examples/Edgent_Linux_RPi`
 
 ## ESP32/ESP8266 installation
 
 - Get the latest [MicroPython](https://micropython.org/download) firmware and flash it to your board  
-  **Note:** for ESP32 you can also try [LoBo](https://github.com/loboris/MicroPython_ESP32_psRAM_LoBo/wiki/firmwares) firmware
 - Edit [ESP8266_ESP32.py](examples/hardware/ESP8266_ESP32.py) example (put your `auth token` and wifi credentials)
 - Use `ampy` or any other method to transfer files to the device  
     ```sh
@@ -112,7 +108,7 @@ __________
 * [Node.js, Espruino, Browsers](https://github.com/vshymanskyy/blynk-library-js)
 * [OpenWrt packages](https://github.com/vshymanskyy/blynk-library-openwrt)
 * [MBED](https://developer.mbed.org/users/vshymanskyy/code/Blynk/)
-* [Node-RED for Blynk IoT](https://flows.nodered.org/node/node-red-contrib-blynk-iot) and [for old Blynk](https://www.npmjs.com/package/node-red-contrib-blynk-ws)
+* [Node-RED for Blynk IoT](https://flows.nodered.org/node/node-red-contrib-blynk-iot)
 * [LabVIEW](https://github.com/juncaofish/NI-LabVIEWInterfaceforBlynk)
 * [C#](https://github.com/sverrefroy/BlynkLibrary)
 
