@@ -31,7 +31,6 @@ Blynk is **the most popular IoT platform** used by design studios, makers, educa
 Social: [Webpage](http://www.blynk.cc) / [Facebook](http://www.fb.com/blynkapp) / [Twitter](http://twitter.com/blynk_app) / [Kickstarter](https://www.kickstarter.com/projects/167134865/blynk-build-an-app-for-your-arduino-project-in-5-m/description)  
 Documentation: https://docs.blynk.io  
 Community Forum: http://community.blynk.cc  
-Examples Browser: http://examples.blynk.cc  
 Blynk for Business: http://www.blynk.io
 
 ## Usage example
@@ -67,6 +66,7 @@ while True:
 - `set_property`
 - `log_event`
 - events: `Vn`, `connected`, `disconnected`, `invalid_auth`
+- `TCP` and secure `TLS/SSL` connection support
 - can run on embedded hardware, like `ESP8266`, `ESP32`, `W600` or `OpenWrt`
 
 ## Ubuntu/Linux/Raspberry Pi installation
