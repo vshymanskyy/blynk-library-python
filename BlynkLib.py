@@ -256,6 +256,9 @@ class Blynk(BlynkProtocol):
             #print('>', data)
         except KeyboardInterrupt:
             raise
+        except socket.timeout:
+            # No data received, call process to send ping messages when needed
+            pass
         except: # TODO: handle disconnect
             return
         self.process(data)
