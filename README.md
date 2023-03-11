@@ -39,7 +39,7 @@ Blynk for Business: http://www.blynk.io
 import BlynkLib
 
 # Initialize Blynk
-blynk = BlynkLib.Blynk('YourAuthToken')
+blynk = BlynkLib.Blynk('YourAuthToken', server="blynk.cloud")
 
 # Register Virtual Pins
 @blynk.VIRTUAL_WRITE(1)
