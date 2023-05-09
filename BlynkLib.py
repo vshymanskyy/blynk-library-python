@@ -222,8 +222,19 @@ class Blynk(BlynkProtocol):
 
     def connect(self):
         print('Connecting to %s:%d...' % (self.server, self.port))
-        s = socket.socket()
-        s.connect(socket.getaddrinfo(self.server, self.port)[0][-1])
+        # Lookup the host with a filter on the results set.
+        hostinfo = socket.getaddrinfo(self.server, self.port,
+                                      type=socket.SOCK_STREAM,
+                                      proto=socket.IPPROTO_TCP)
+        # Use the first host address entry regardless of family.
+        (family, socktype, proto, canonname, sockaddr) = hostinfo[0]
+        # An IPv6 sockaddr tuple has extra values so discard these.
+        address = sockaddr[:2]
+        # Create a TCP socket supporting IPv4 or IPv6.
+        s = socket.socket(family=family,
+                          type=socktype,
+                          proto=proto)
+        s.connect(address)
         try:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         except:
