@@ -236,7 +236,7 @@ class Blynk(BlynkProtocol):
                 ssl_context = ussl
             except ImportError:
                 import ssl
-                ssl_context = ssl.create_default_context()
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
             self.conn = ssl_context.wrap_socket(s, server_hostname=self.server)
         try:
             self.conn.settimeout(SOCK_TIMEOUT)
