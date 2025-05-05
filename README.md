@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **This project has been archived and is no longer maintained.**  
+> No further updates or support will be provided.  
+> We recommend switching to the **Blynk MQTT API** for future development.  
+> You can explore some [useful examples here](https://github.com/Blynk-Technologies/Blynk-MQTT-Samples).
+
 # Python client for Blynk IoT
 
 **Note:** The library has been updated for Blynk 2.0.  
